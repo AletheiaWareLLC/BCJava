@@ -74,6 +74,7 @@ public final class BCUtils {
 
     public static final int PORT_BLOCK = 22222;
     public static final int PORT_HEAD = 22232;
+    public static final int PORT_KEYS = 22322;
     public static final int PORT_STATUS = 23222;
     public static final int PORT_WRITE = 23232;
 
