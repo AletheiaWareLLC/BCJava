@@ -21,7 +21,7 @@ rm -r out
 mkdir out
 
 SOURCES=(
-    source/com/aletheiaware/bc/BC.java
+    source/com/aletheiaware/bc/BCProto.java
     source/com/aletheiaware/bc/utils/BCUtils.java
 )
 

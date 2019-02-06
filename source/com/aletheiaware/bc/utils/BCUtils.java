@@ -16,11 +16,25 @@
 
 package com.aletheiaware.bc.utils;
 
+import com.aletheiaware.bc.BCProto.Block;
+import com.aletheiaware.bc.BCProto.KeyShare;
+import com.aletheiaware.bc.BCProto.Reference;
+import com.aletheiaware.bc.BCProto.SignatureAlgorithm;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.lang.reflect.InvocationTargetException;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -35,6 +49,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
@@ -44,7 +59,9 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
@@ -73,15 +90,13 @@ public final class BCUtils {
     public static final int RSA_KEY_SIZE_BITS = 4096;
 
     public static final int PORT_BLOCK = 22222;
-    public static final int PORT_HEAD = 22232;
-    public static final int PORT_KEYS = 22322;
-    public static final int PORT_STATUS = 23222;
+    public static final int PORT_HEAD = 22322;
     public static final int PORT_WRITE = 23232;
 
     public static final String AES = "AES";
-    public static final String AES_CIPHER = "AES/GCM/NoPadding"; //AES_128 // TODO AES/GCM/NoPadding on Android API 19 to 26
+    public static final String AES_CIPHER = "AES/GCM/NoPadding";
     public static final String HASH_DIGEST = "SHA-512";
-    public static final String PBE_CIPHER = "PBKDF2WithHmacSHA1"; // TODO check Android compatibility
+    public static final String PBE_CIPHER = "PBKDF2WithHmacSHA1";
     public static final String RSA = "RSA";
     public static final String RSA_CIPHER = "RSA/ECB/OAEPPadding";
     public static final String SIGNATURE_ALGORITHM = "SHA512withRSA";// TODO check Go compatibility
@@ -102,6 +117,96 @@ public final class BCUtils {
             }
         }
         return ones;
+    }
+
+    public static Reference getHead(InetAddress address, Reference reference) throws IOException {
+        Socket s = new Socket(address, PORT_HEAD);
+        InputStream in = s.getInputStream();
+        OutputStream out = s.getOutputStream();
+        reference.writeDelimitedTo(out);
+        out.flush();
+        return Reference.parseDelimitedFrom(in);
+    }
+
+    public static Block getBlock(InetAddress address, Reference reference) throws IOException {
+        Socket s = new Socket(address, PORT_BLOCK);
+        InputStream in = s.getInputStream();
+        OutputStream out = s.getOutputStream();
+        reference.writeDelimitedTo(out);
+        out.flush();
+        return Block.parseDelimitedFrom(in);
+    }
+
+    public static byte[] encodeBase64(byte[] data) {
+        try {
+            return java.util.Base64.getEncoder().encode(data);
+        } catch (java.lang.NoClassDefFoundError e) {
+            try {
+                // Android doesn't have java.util.Base64, try android.util.Base64
+                Class<?> c = Class.forName("android.util.Base64");
+                java.lang.reflect.Method m = c.getDeclaredMethod("encode", byte[].class, int.class);
+                return (byte[]) m.invoke(null, data, 0);
+            } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+                ex.printStackTrace();
+                throw e; // Throw original exception
+            }
+        }
+    }
+
+    public static byte[] encodeBase64URL(byte[] data) {
+        try {
+            return java.util.Base64.getUrlEncoder().withoutPadding().encode(data);
+        } catch (java.lang.NoClassDefFoundError e) {
+            try {
+                // Android doesn't have java.util.Base64, try android.util.Base64
+                Class<?> c = Class.forName("android.util.Base64");
+                int urlSafe = c.getDeclaredField("URL_SAFE").getInt(null);
+                int noWrap = c.getDeclaredField("NO_WRAP").getInt(null);
+                int noPadding = c.getDeclaredField("NO_PADDING").getInt(null);
+                int flag = urlSafe | noWrap | noPadding;
+                java.lang.reflect.Method m = c.getDeclaredMethod("encode", byte[].class, int.class);
+                return (byte[]) m.invoke(null, data, (Integer) flag);
+            } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchFieldException | NoSuchMethodException ex) {
+                ex.printStackTrace();
+                throw e; // Throw original exception
+            }
+        }
+    }
+
+    public static byte[] decodeBase64(byte[] base64) {
+        try {
+            return java.util.Base64.getDecoder().decode(base64);
+        } catch (java.lang.NoClassDefFoundError e) {
+            try {
+                // Android doesn't have java.util.Base64, try android.util.Base64
+                Class<?> c = Class.forName("android.util.Base64");
+                java.lang.reflect.Method m = c.getDeclaredMethod("decode", byte[].class, int.class);
+                return (byte[]) m.invoke(null, base64, 0);
+            } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+                ex.printStackTrace();
+                throw e; // Throw original exception
+            }
+        }
+    }
+
+    public static byte[] decodeBase64URL(byte[] base64) {
+        try {
+            return java.util.Base64.getUrlDecoder().decode(base64);
+        } catch (java.lang.NoClassDefFoundError e) {
+            try {
+                // Android doesn't have java.util.Base64, try android.util.Base64
+                Class<?> c = Class.forName("android.util.Base64");
+                int urlSafe = c.getDeclaredField("URL_SAFE").getInt(null);
+                int noWrap = c.getDeclaredField("NO_WRAP").getInt(null);
+                int noPadding = c.getDeclaredField("NO_PADDING").getInt(null);
+                int flag = urlSafe | noWrap | noPadding;
+                java.lang.reflect.Method m = c.getDeclaredMethod("decode", byte[].class, int.class);
+                return (byte[]) m.invoke(null, base64, (Integer) flag);
+            } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchFieldException | NoSuchMethodException ex) {
+                ex.printStackTrace();
+                throw e; // Throw original exception
+            }
+        }
     }
 
     /*
@@ -135,7 +240,7 @@ public final class BCUtils {
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, AES), gcmSpec);
 
         // Encrypt the data with the key
-        byte[] encryptedData = cipher.doFinal(data);
+        byte[] encryptedData = cipher.doFinal(data);// TODO switch to streams
 
         // Create result array
         byte[] result = new byte[AES_IV_SIZE_BYTES + encryptedData.length];
@@ -244,24 +349,122 @@ public final class BCUtils {
     /*
      * Create a random RSA key pair.
      */
-    public static KeyPair createRSAKeyPair(File directory, char[] password) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
+    public static KeyPair createRSAKeyPair(File directory, String alias, char[] password) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
+        System.out.println("Creating " + RSA_KEY_SIZE_BITS + "bit " + RSA + " key pair: " + alias);
         KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA);
         generator.initialize(RSA_KEY_SIZE_BITS);
         KeyPair pair = generator.genKeyPair();
-        File privFile = new File(directory, "private.key");
-        File pubFile = new File(directory, "public.key");
-        writeFile(privFile, encryptAES(password, pair.getPrivate().getEncoded()));
-        writeFile(pubFile, pair.getPublic().getEncoded());
+        writeRSAKeyPair(directory, alias, password, pair);
         return pair;
     }
 
-    public static boolean hasRSAKeyPair(File directory) {
-        return new File(directory, "private.key").exists();
+    /*
+     * Create an RSA key pair from the given private key format and bytes.
+     */
+    public static KeyPair importRSAKeyPair(File directory, String accessCode, KeyShare ks) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
+        System.out.println("KeyShare: " + ks);
+        byte[] key = decodeBase64URL(accessCode.getBytes("utf-8"));
+        KeySpec publicSpec = null;
+        byte[] pub = ks.getPublicKey().toByteArray();
+        switch (ks.getPublicFormat()) {
+            case X509:
+                publicSpec = new X509EncodedKeySpec(pub);
+                break;
+            case UNKNOWN_PUBLIC_KEY_FORMAT:
+            default:
+                throw new IOException("Unknown public key format");
+        }
+        KeySpec privateSpec = null;
+        byte[] priv = decryptAES(key, ks.getPrivateKey().toByteArray());
+        switch (ks.getPrivateFormat()) {
+            case PKCS8:
+                privateSpec = new PKCS8EncodedKeySpec(priv);
+                break;
+            case UNKNOWN_PRIVATE_KEY_FORMAT:
+            default:
+                throw new IOException("Unknown private key format");
+        }
+        PrivateKey privateKey = KeyFactory.getInstance(RSA).generatePrivate(privateSpec);
+        PublicKey publicKey = KeyFactory.getInstance(RSA).generatePublic(publicSpec);
+        KeyPair pair = new KeyPair(publicKey, privateKey);
+        char[] password = new String(decryptAES(key, ks.getPassword().toByteArray())).toCharArray();
+        System.out.println("Password: " + password);
+        writeRSAKeyPair(directory, ks.getAlias(), password, pair);
+        return pair;
     }
 
-    public static KeyPair getRSAKeyPair(File directory, char[] password) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
-        File privFile = new File(directory, "private.key");
-        File pubFile = new File(directory, "public.key");
+    /*
+     * Write an RSA key pair to files.
+     */
+    public static void writeRSAKeyPair(File directory, String alias, char[] password, KeyPair pair) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
+        byte[] privateKeyBytes = pair.getPrivate().getEncoded();
+        byte[] publicKeyBytes = pair.getPublic().getEncoded();
+        if (alias == null || alias.isEmpty()) {
+            alias = new String(encodeBase64URL(getHash(publicKeyBytes)));
+        }
+        File privFile = new File(directory, alias + ".priv");
+        File pubFile = new File(directory, alias + ".pub");
+        writeFile(privFile, encryptAES(password, privateKeyBytes));
+        writeFile(pubFile, publicKeyBytes);
+    }
+
+    /**
+     * Registers the alias and public key (private key used for signature).
+     */
+    public static void registerAlias(String alias, KeyPair keys) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
+        String publicKey = "-----BEGIN PUBLIC KEY-----\n" + new String(encodeBase64(keys.getPublic().getEncoded())) + "\n-----END PUBLIC KEY-----\n";
+        String publicKeyFormat = keys.getPublic().getFormat();
+        byte[] signature = sign(keys.getPrivate(), (alias + "\n" + publicKey).getBytes(StandardCharsets.UTF_8));
+        String params = "alias=" + URLEncoder.encode(alias, "utf-8")
+                + "&publicKey=" + URLEncoder.encode(publicKey, "utf-8")
+                + "&publicKeyFormat=" + URLEncoder.encode(publicKeyFormat, "utf-8")
+                + "&signature=" + URLEncoder.encode(new String(encodeBase64URL(signature)), "utf-8")
+                + "&signatureAlgorithm=" + URLEncoder.encode(SignatureAlgorithm.SHA512WITHRSA.toString(), "utf-8");
+        System.out.println("Params:" + params);
+        byte[] data = params.getBytes(StandardCharsets.UTF_8);
+        //TODO URL url = new URL("https://bc.aletheiaware.com:443/alias");
+        //TODO HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        URL url = new URL("http://bc.aletheiaware.com/alias");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setInstanceFollowRedirects(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setRequestProperty("charset", "utf-8");
+        conn.setRequestProperty("Content-Length", Integer.toString(data.length));
+        conn.setUseCaches(false);
+        try (OutputStream o = conn.getOutputStream()) {
+            o.write(data);
+            o.flush();
+        }
+
+        int response = conn.getResponseCode();
+        System.out.println("Response: " + response);
+        Scanner in = new Scanner(conn.getInputStream());
+        while (in.hasNextLine()) {
+            System.out.println(in.nextLine());
+        }
+    }
+
+    public static boolean deleteRSAKeyPair(File directory, String alias) {
+        return new File(directory, alias + ".priv").delete()
+                && new File(directory, alias + ".pub").delete();
+    }
+
+    public static List<String> listRSAKeyPairs(File directory) {
+        List<String> aliases = new ArrayList<>();
+        for (String f : directory.list()) {
+            int index = f.lastIndexOf('.');
+            if (index > 0 && f.substring(index + 1).equals("priv")) {
+                aliases.add(f.substring(0, index));
+            }
+        }
+        return aliases;
+    }
+
+    public static KeyPair getRSAKeyPair(File directory, String alias, char[] password) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
+        File privFile = new File(directory, alias + ".priv");
+        File pubFile = new File(directory, alias + ".pub");
         byte[] privBytes = decryptAES(password, readFile(privFile));
         byte[] pubBytes = readFile(pubFile);
         PrivateKey privKey = KeyFactory.getInstance(RSA).generatePrivate(new PKCS8EncodedKeySpec(privBytes));
@@ -325,6 +528,15 @@ public final class BCUtils {
             if (out != null) {
                 out.close();
             }
+        }
+    }
+
+    public static class Pair<A, B> {
+        public A a;
+        public B b;
+        public Pair(A a, B b) {
+            this.a = a;
+            this.b = b;
         }
     }
 }
