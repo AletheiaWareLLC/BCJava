@@ -28,7 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
@@ -77,6 +76,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.PSource.PSpecified;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.HttpsURLConnection;
 
 public final class BCUtils {
 
@@ -93,6 +93,9 @@ public final class BCUtils {
     public static final int PORT_HEAD = 22322;
     public static final int PORT_WRITE = 23232;
 
+    public static final String BC_HOST = "bc.aletheiaware.com";
+    public static final String BC_WEBSITE = "https://bc.aletheiaware.com";
+
     public static final String AES = "AES";
     public static final String AES_CIPHER = "AES/GCM/NoPadding";
     public static final String HASH_DIGEST = "SHA-512";
@@ -100,6 +103,10 @@ public final class BCUtils {
     public static final String RSA = "RSA";
     public static final String RSA_CIPHER = "RSA/ECB/OAEPPadding";
     public static final String SIGNATURE_ALGORITHM = "SHA512withRSA";// TODO check Go compatibility
+    public static final String PRIVATE_KEY_EXT = ".java.private";
+    public static final String PUBLIC_KEY_EXT = ".java.public";
+
+    private BCUtils() {}
 
     public static byte[] getHash(byte[] data) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance(HASH_DIGEST);
@@ -362,11 +369,11 @@ public final class BCUtils {
      * Create an RSA key pair from the given private key format and bytes.
      */
     public static KeyPair importRSAKeyPair(File directory, String accessCode, KeyShare ks) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
-        System.out.println("KeyShare: " + ks);
         byte[] key = decodeBase64URL(accessCode.getBytes("utf-8"));
         KeySpec publicSpec = null;
         byte[] pub = ks.getPublicKey().toByteArray();
         switch (ks.getPublicFormat()) {
+            case PKIX:
             case X509:
                 publicSpec = new X509EncodedKeySpec(pub);
                 break;
@@ -402,30 +409,33 @@ public final class BCUtils {
         if (alias == null || alias.isEmpty()) {
             alias = new String(encodeBase64URL(getHash(publicKeyBytes)));
         }
-        File privFile = new File(directory, alias + ".priv");
-        File pubFile = new File(directory, alias + ".pub");
+        File privFile = new File(directory, alias + PRIVATE_KEY_EXT);
+        File pubFile = new File(directory, alias + PUBLIC_KEY_EXT);
         writeFile(privFile, encryptAES(password, privateKeyBytes));
         writeFile(pubFile, publicKeyBytes);
     }
 
     /**
-     * Registers the alias and public key (private key used for signature).
+     * Exports the given alias and keys to the BC server for importing to another device.
      */
-    public static void registerAlias(String alias, KeyPair keys) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
-        String publicKey = "-----BEGIN PUBLIC KEY-----\n" + new String(encodeBase64(keys.getPublic().getEncoded())) + "\n-----END PUBLIC KEY-----\n";
-        String publicKeyFormat = keys.getPublic().getFormat();
-        byte[] signature = sign(keys.getPrivate(), (alias + "\n" + publicKey).getBytes(StandardCharsets.UTF_8));
+    public static void exportKeyPair(File directory, String alias, char[] password, KeyPair keys, byte[] accessCode) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
+        String publicKeyFormat = keys.getPublic().getFormat().replaceAll("\\.", "");// Remove dot from X.509
+        String privateKeyFormat = keys.getPrivate().getFormat().replaceAll("#", "");// Remove hash from PKCS#8
+        byte[] publicKeyBytes = keys.getPublic().getEncoded();
+        byte[] privateKeyBytes = keys.getPrivate().getEncoded();
+        byte[] encryptedPrivateKeyBytes = encryptAES(accessCode, privateKeyBytes);
+        byte[] encryptedPassword = encryptAES(accessCode, new String(password).getBytes("utf-8"));
         String params = "alias=" + URLEncoder.encode(alias, "utf-8")
-                + "&publicKey=" + URLEncoder.encode(publicKey, "utf-8")
+                + "&publicKey=" + new String(encodeBase64URL(publicKeyBytes), "utf-8")
                 + "&publicKeyFormat=" + URLEncoder.encode(publicKeyFormat, "utf-8")
-                + "&signature=" + URLEncoder.encode(new String(encodeBase64URL(signature)), "utf-8")
-                + "&signatureAlgorithm=" + URLEncoder.encode(SignatureAlgorithm.SHA512WITHRSA.toString(), "utf-8");
+                + "&privateKey=" + new String(encodeBase64URL(encryptedPrivateKeyBytes), "utf-8")
+                + "&privateKeyFormat=" + URLEncoder.encode(privateKeyFormat, "utf-8")
+                + "&password=" + new String(encodeBase64URL(encryptedPassword), "utf-8");
         System.out.println("Params:" + params);
         byte[] data = params.getBytes(StandardCharsets.UTF_8);
-        //TODO URL url = new URL("https://bc.aletheiaware.com:443/alias");
-        //TODO HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-        URL url = new URL("http://bc.aletheiaware.com/alias");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+        URL url = new URL(BC_WEBSITE + "/keys");
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setInstanceFollowRedirects(false);
         conn.setRequestMethod("POST");
@@ -446,25 +456,41 @@ public final class BCUtils {
         }
     }
 
+    /**
+     * Get the key share for the given alias from the BC server.
+     */
+    public static KeyShare getKeyShare(String alias) throws IOException {
+        URL url = new URL(BC_WEBSITE + "/keys?alias=" + URLEncoder.encode(alias, "utf-8"));
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setInstanceFollowRedirects(false);
+        conn.setRequestMethod("GET");
+        conn.setUseCaches(false);
+
+        int response = conn.getResponseCode();
+        System.out.println("Response: " + response);
+        KeyShare ks = KeyShare.newBuilder().mergeFrom(conn.getInputStream()).build();
+        System.out.println("KeyShare: " + ks);
+        return ks;
+    }
+
     public static boolean deleteRSAKeyPair(File directory, String alias) {
-        return new File(directory, alias + ".priv").delete()
-                && new File(directory, alias + ".pub").delete();
+        return new File(directory, alias + PRIVATE_KEY_EXT).delete()
+                && new File(directory, alias + PUBLIC_KEY_EXT).delete();
     }
 
     public static List<String> listRSAKeyPairs(File directory) {
         List<String> aliases = new ArrayList<>();
         for (String f : directory.list()) {
-            int index = f.lastIndexOf('.');
-            if (index > 0 && f.substring(index + 1).equals("priv")) {
-                aliases.add(f.substring(0, index));
+            if (f.endsWith(PRIVATE_KEY_EXT)) {
+                aliases.add(f.substring(0, f.length() - PRIVATE_KEY_EXT.length()));
             }
         }
         return aliases;
     }
 
     public static KeyPair getRSAKeyPair(File directory, String alias, char[] password) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
-        File privFile = new File(directory, alias + ".priv");
-        File pubFile = new File(directory, alias + ".pub");
+        File privFile = new File(directory, alias + PRIVATE_KEY_EXT);
+        File pubFile = new File(directory, alias + PUBLIC_KEY_EXT);
         byte[] privBytes = decryptAES(password, readFile(privFile));
         byte[] pubBytes = readFile(pubFile);
         PrivateKey privKey = KeyFactory.getInstance(RSA).generatePrivate(new PKCS8EncodedKeySpec(privBytes));
