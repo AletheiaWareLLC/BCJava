@@ -16,10 +16,16 @@
 
 package com.aletheiaware.bc.utils;
 
+import com.aletheiaware.bc.BC.Channel.EntryCallback;
 import com.aletheiaware.bc.BCProto.Block;
+import com.aletheiaware.bc.BCProto.BlockEntry;
+import com.aletheiaware.bc.BCProto.EncryptionAlgorithm;
 import com.aletheiaware.bc.BCProto.KeyShare;
+import com.aletheiaware.bc.BCProto.Record;
 import com.aletheiaware.bc.BCProto.Reference;
 import com.aletheiaware.bc.BCProto.SignatureAlgorithm;
+
+import com.google.protobuf.ByteString;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,9 +64,12 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
@@ -89,9 +98,19 @@ public final class BCUtils {
     public static final int PBE_ITERATIONS = 10000;
     public static final int RSA_KEY_SIZE_BITS = 4096;
 
+    public static final long THRESHOLD_NONE = 0;
+    public static final long THRESHOLD_LITE = 264; // 33/64
+    public static final long THRESHOLD_STANDARD = 272; // 17/32
+    public static final long THRESHOLD_PVB_HOUR = 288; // 9/16
+    public static final long THRESHOLD_PVB_DAY = 320; // 5/8
+    public static final long THRESHOLD_PVB_YEAR = 384; // 3/4
+
     public static final int PORT_BLOCK = 22222;
     public static final int PORT_HEAD = 22322;
-    public static final int PORT_WRITE = 23232;
+    public static final int PORT_CAST = 23232;
+
+    public static final long MAX_BLOCK_SIZE_BYTES = 2L * 1024 * 1024 * 1024;// 2Gb
+    public static final long MAX_PAYLOAD_SIZE_BYTES = 10L * 1024 * 1024;// 10Mb
 
     public static final String BC_HOST = "bc.aletheiaware.com";
     public static final String BC_WEBSITE = "https://bc.aletheiaware.com";
@@ -102,11 +121,46 @@ public final class BCUtils {
     public static final String PBE_CIPHER = "PBKDF2WithHmacSHA1";
     public static final String RSA = "RSA";
     public static final String RSA_CIPHER = "RSA/ECB/OAEPPadding";
-    public static final String SIGNATURE_ALGORITHM = "SHA512withRSA";// TODO check Go compatibility
+    public static final String SIGNATURE_ALGORITHM = "SHA512withRSA";
     public static final String PRIVATE_KEY_EXT = ".java.private";
     public static final String PUBLIC_KEY_EXT = ".java.public";
 
+    private static final DateFormat FORMATTER = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
+
     private BCUtils() {}
+
+    public static String sizeToString(long size) {
+        if (size <= 1024) {
+            return String.format("%dbytes", size);
+        }
+        String unit = "";
+        double s = size;
+        if (s >= 1024) {
+            s /= 1024;
+            unit = "Kb";
+        }
+        if (s >= 1024) {
+            s /= 1024;
+            unit = "Mb";
+        }
+        if (s >= 1024) {
+            s /= 1024;
+            unit = "Gb";
+        }
+        if (s >= 1024) {
+            s /= 1024;
+            unit = "Tb";
+        }
+        if (s >= 1024) {
+            s /= 1024;
+            unit = "Pb";
+        }
+        return String.format("%.2f%s", s, unit);
+    }
+
+    public static String timeToString(long nanos) {
+        return FORMATTER.format(new Date(nanos/1000000));
+    }
 
     public static byte[] getHash(byte[] data) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance(HASH_DIGEST);
@@ -142,6 +196,15 @@ public final class BCUtils {
         reference.writeDelimitedTo(out);
         out.flush();
         return Block.parseDelimitedFrom(in);
+    }
+
+    public static Reference setBlock(InetAddress address, Block block) throws IOException {
+        Socket s = new Socket(address, PORT_CAST);
+        InputStream in = s.getInputStream();
+        OutputStream out = s.getOutputStream();
+        block.writeDelimitedTo(out);
+        out.flush();
+        return Reference.parseDelimitedFrom(in);
     }
 
     public static byte[] encodeBase64(byte[] data) {
@@ -247,7 +310,7 @@ public final class BCUtils {
         cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, AES), gcmSpec);
 
         // Encrypt the data with the key
-        byte[] encryptedData = cipher.doFinal(data);// TODO switch to streams
+        byte[] encryptedData = cipher.doFinal(data);
 
         // Create result array
         byte[] result = new byte[AES_IV_SIZE_BYTES + encryptedData.length];
@@ -352,6 +415,17 @@ public final class BCUtils {
         byte[] decryptedData = cipher.doFinal(encryptedData);
         return decryptedData;
     }
+
+    /*
+     * Create RSA key pair from given seed.
+     *
+    public static KeyPair generateKeyPair(long seed) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
+        System.out.println("Generating " + RSA_KEY_SIZE_BITS + "bit " + RSA + " key pair from seed");
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA);
+        generator.initialize(RSA_KEY_SIZE_BITS, seed);
+        return generator.genKeyPair();
+    }
+    /* End generateKeyPair */
 
     /*
      * Create a random RSA key pair.
@@ -524,6 +598,53 @@ public final class BCUtils {
         signature.initVerify(key);
         signature.update(data);
         return signature.verify(sig);
+    }
+
+    public interface RecordCallback {
+        void onRecord(Record record);
+    }
+
+    public static long createEntries(String alias, KeyPair keys, Map<String, PublicKey> acl, List<Reference> references, InputStream in, RecordCallback callback) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException {
+        byte[] buffer = new byte[(int)MAX_PAYLOAD_SIZE_BYTES];
+        long size = 0L;
+        int count;
+        while ((count = in.read(buffer)) > 0) {
+            size += count;
+            byte[] payload = new byte[count];
+            System.arraycopy(buffer, 0, payload, 0, count);
+            Record record = createRecord(alias, keys, acl, references, payload);
+            callback.onRecord(record);
+        }
+        return size;
+    }
+
+    public static Record createRecord(String alias, KeyPair keys, Map<String, PublicKey> acl, List<Reference> references, byte[] payload) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException {
+        if (payload.length > BCUtils.MAX_PAYLOAD_SIZE_BYTES) {
+            System.err.println("Payload too large: " + BCUtils.sizeToString(payload.length) + " max: " + BCUtils.sizeToString(BCUtils.MAX_PAYLOAD_SIZE_BYTES));
+            return null;
+        }
+        byte[] key = generateSecretKey(AES_KEY_SIZE_BYTES);
+        byte[] encryptedPayload = encryptAES(key, payload);
+        byte[] signature = sign(keys.getPrivate(), encryptedPayload);
+        List<Record.Access> access = new ArrayList<>(acl.size());
+        for (String a : acl.keySet()) {
+            byte[] k = encryptRSA(acl.get(a), key);
+            access.add(Record.Access.newBuilder()
+                .setAlias(a)
+                .setSecretKey(ByteString.copyFrom(k))
+                .setEncryptionAlgorithm(EncryptionAlgorithm.RSA_ECB_OAEPPADDING)
+                .build());
+        }
+        return Record.newBuilder()
+            .setTimestamp(System.nanoTime())
+            .setCreator(alias)
+            .addAllAccess(access)
+            .setPayload(ByteString.copyFrom(encryptedPayload))
+            .setEncryptionAlgorithm(EncryptionAlgorithm.AES_GCM_NOPADDING)
+            .setSignature(ByteString.copyFrom(signature))
+            .setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+            .addAllReference(references)
+            .build();
     }
 
     public static byte[] readFile(File file) throws FileNotFoundException, IOException {
