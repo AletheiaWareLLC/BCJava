@@ -379,7 +379,7 @@ public class BC {
 
         public Pair<byte[], Block> mine(Channel channel, List<BlockEntry> entries) throws BadPaddingException, IOException, NoSuchAlgorithmException {
             Block.Builder bb = Block.newBuilder()
-                    .setTimestamp(System.nanoTime())
+                    .setTimestamp(System.currentTimeMillis() * 1000000)// Convert milli to nano seconds
                     .setChannelName(channel.name)
                     .setLength(1)
                     .setMiner(alias)

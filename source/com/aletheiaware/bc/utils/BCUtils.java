@@ -636,7 +636,7 @@ public final class BCUtils {
                 .build());
         }
         return Record.newBuilder()
-            .setTimestamp(System.nanoTime())
+            .setTimestamp(System.currentTimeMillis() * 1000000)// Convert milli to nano seconds
             .setCreator(alias)
             .addAllAccess(access)
             .setPayload(ByteString.copyFrom(encryptedPayload))
