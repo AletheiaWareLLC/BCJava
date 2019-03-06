@@ -120,8 +120,10 @@ public class BC {
             headBlock = block;
         }
 
+        /*
+         * Update channel from remote host and download all blocks in chain node doesn't have
+         */
         public void sync() throws IOException, NoSuchAlgorithmException {
-            // Update channel from remote host and download all blocks in chain node doesn't have
             Reference reference = getRemoteHead();
             if (reference != null) {
                 ByteString head = reference.getBlockHash();
@@ -140,8 +142,10 @@ public class BC {
             }
         }
 
+        /*
+         * Update remote host channel and upload all blocks in chain host doesn't have
+         */
         public void cast() throws IOException {
-            // Update remote host channel and upload all blocks in chain host doesn't have
             if (headHash == null || headBlock == null) {
                 System.err.println("Nothing to cast");
                 return;
