@@ -315,6 +315,9 @@ public class BC {
             while (hash != null && !hash.isEmpty()) {
                 // System.out.println("BlockHash:" + new String(BCUtils.encodeBase64URL(hash.toByteArray())));
                 Block block = getBlock(hash);
+                if (block == null) {
+                    break;
+                }
                 for (BlockEntry e : block.getEntryList()) {
                     callback.onEntry(hash, block, e);
                 }
