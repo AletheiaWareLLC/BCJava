@@ -101,19 +101,16 @@ public class BC {
             }
             String filename = new String(BCUtils.encodeBase64URL(name.getBytes()));// Convert to Base64 for filesystem
             File file = new File(new File(cache, "channel"), filename);
-            FileOutputStream out = null;
-            try {
-                out = new FileOutputStream(file);
+            try (FileOutputStream out = new FileOutputStream(file)) {
                 Reference.newBuilder()
                         .setChannelName(name)
                         .setBlockHash(hash)
                         .build()
                         .writeTo(out);
                 out.flush();
-            } finally {
-                if (out != null) {
-                    out.close();
-                }
+            } catch (IOException e) {
+                /* Ignored */
+                e.printStackTrace();
             }
             headHash = hash;
             putBlock(block);
@@ -187,18 +184,15 @@ public class BC {
         public void loadHead() throws IOException {
             String filename = new String(BCUtils.encodeBase64URL(name.getBytes()));// Convert to Base64 for filesystem
             File file = new File(new File(cache, "channel"), filename);
-            FileInputStream in = null;
             if (file.exists()) {
-                try {
-                    in = new FileInputStream(file);
+                try (FileInputStream in = new FileInputStream(file)) {
                     Reference r = Reference.parseFrom(in);
                     if (r != null && r.getChannelName().equals(name)) {
                         setHead(r.getBlockHash());
                     }
-                } finally {
-                    if (in != null) {
-                        in.close();
-                    }
+                } catch (IOException e) {
+                    /* Ignored */
+                    e.printStackTrace();
                 }
             }
         }
@@ -247,19 +241,13 @@ public class BC {
         public Block getBlock(ByteString blockHash) throws IOException {
             String filename = new String(BCUtils.encodeBase64URL(blockHash.toByteArray()));// Convert to Base64 for filesystem
             File file = new File(new File(cache, "block"), filename);
-            FileInputStream in = null;
             Block b = null;
             if (file.exists()) {
-                try {
-                    in = new FileInputStream(file);
+                try (FileInputStream in = new FileInputStream(file)) {
                     b = Block.parseFrom(in);
                 } catch (IOException e) {
                     /* Ignored */
                     e.printStackTrace();
-                } finally {
-                    if (in != null) {
-                        in.close();
-                    }
                 }
             }
             if (b == null) {
@@ -281,15 +269,12 @@ public class BC {
             byte[] hash = BCUtils.getHash(block.toByteArray());
             String filename = new String(BCUtils.encodeBase64URL(hash));// Convert to Base64 for filesystem
             File file = new File(new File(cache, "block"), filename);
-            FileOutputStream out = null;
-            try {
-                out = new FileOutputStream(file);
+            try (FileOutputStream out = new FileOutputStream(file)) {
                 block.writeTo(out);
                 out.flush();
-            } finally {
-                if (out != null) {
-                    out.close();
-                }
+            } catch (IOException e) {
+                /* Ignored */
+                e.printStackTrace();
             }
         }
 

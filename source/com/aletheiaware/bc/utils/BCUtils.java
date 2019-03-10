@@ -657,33 +657,27 @@ public final class BCUtils {
     }
 
     public static byte[] readFile(File file) throws FileNotFoundException, IOException {
-        FileInputStream in = null;
         byte[] data = null;
         if (file.exists()) {
-            try {
-                in = new FileInputStream(file);
+            try (FileInputStream in = new FileInputStream(file)) {
                 data = new byte[in.available()];
                 in.read(data);
-            } finally {
-                if (in != null) {
-                    in.close();
-                }
+            } catch (IOException e) {
+                /* Ignored */
+                e.printStackTrace();
             }
         }
         return data;
     }
 
     public static void writeFile(File file, byte[] data) throws FileNotFoundException, IOException {
-        FileOutputStream out = null;
-        try {
-            file.createNewFile();
-            out = new FileOutputStream(file);
+        file.createNewFile();
+        try (FileOutputStream out = new FileOutputStream(file)) {
             out.write(data);
             out.flush();
-        } finally {
-            if (out != null) {
-                out.close();
-            }
+        } catch (IOException e) {
+            /* Ignored */
+            e.printStackTrace();
         }
     }
 
