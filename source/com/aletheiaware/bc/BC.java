@@ -304,12 +304,14 @@ public class BC {
                     break;
                 }
                 for (BlockEntry e : block.getEntryList()) {
+                    // TODO if onEntry returns false, break
                     callback.onEntry(hash, block, e);
                 }
                 hash = block.getPrevious();
             }
         }
 
+        // TODO add results parameter to stop iteration when that many results have been found
         public void read(String alias, KeyPair keys, byte[] recordHash, RecordCallback callback) throws IOException {
             iterate(new EntryCallback() {
                 @Override

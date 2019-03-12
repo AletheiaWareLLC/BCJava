@@ -294,7 +294,6 @@ public final class BCUtils {
     public static byte[] generateSecretKey(int size) {
         byte[] k = new byte[size];
         SecureRandom r = new SecureRandom();
-        r.setSeed(System.currentTimeMillis());
         r.nextBytes(k);
         return k;
     }
@@ -306,7 +305,6 @@ public final class BCUtils {
      */
     public static byte[] encryptAES(byte[] key, byte[] data) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
         SecureRandom r = new SecureRandom();
-        r.setSeed(System.currentTimeMillis());
 
         // Create initialization vector
         byte[] iv = new byte[AES_IV_SIZE_BYTES];
@@ -337,7 +335,6 @@ public final class BCUtils {
      */
     public static byte[] encryptAES(char[] password, byte[] data) throws BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchPaddingException {
         SecureRandom r = new SecureRandom();
-        r.setSeed(System.currentTimeMillis());
 
         // Create salt
         byte[] salt = new byte[AES_KEY_SIZE_BYTES];
@@ -462,7 +459,7 @@ public final class BCUtils {
                 break;
             case UNKNOWN_PUBLIC_KEY_FORMAT:
             default:
-                throw new IOException("Unknown public key format");
+                throw new IOException("Unknown public key format: " + ks.getPublicFormat());
         }
         KeySpec privateSpec = null;
         byte[] priv = decryptAES(key, ks.getPrivateKey().toByteArray());
@@ -472,13 +469,12 @@ public final class BCUtils {
                 break;
             case UNKNOWN_PRIVATE_KEY_FORMAT:
             default:
-                throw new IOException("Unknown private key format");
+                throw new IOException("Unknown private key format: " + ks.getPrivateFormat());
         }
         PrivateKey privateKey = KeyFactory.getInstance(RSA).generatePrivate(privateSpec);
         PublicKey publicKey = KeyFactory.getInstance(RSA).generatePublic(publicSpec);
         KeyPair pair = new KeyPair(publicKey, privateKey);
         char[] password = new String(decryptAES(key, ks.getPassword().toByteArray())).toCharArray();
-        System.out.println("Password: " + password);
         writeRSAKeyPair(directory, ks.getAlias(), password, pair);
         return pair;
     }
