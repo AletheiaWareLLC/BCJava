@@ -53,11 +53,11 @@ public class BC {
     public static class Channel {
 
         public interface EntryCallback {
-            void onEntry(ByteString blockHash, Block block, BlockEntry entry);
+            boolean onEntry(ByteString blockHash, Block block, BlockEntry entry);
         }
 
         public interface RecordCallback {
-            void onRecord(ByteString blockHash, Block block, BlockEntry entry, byte[] key, byte[] payload);
+            boolean onRecord(ByteString blockHash, Block block, BlockEntry entry, byte[] key, byte[] payload);
         }
 
         public final String name;
@@ -304,18 +304,18 @@ public class BC {
                     break;
                 }
                 for (BlockEntry e : block.getEntryList()) {
-                    // TODO if onEntry returns false, break
-                    callback.onEntry(hash, block, e);
+                    if (!callback.onEntry(hash, block, e)) {
+                        return;
+                    }
                 }
                 hash = block.getPrevious();
             }
         }
 
-        // TODO add results parameter to stop iteration when that many results have been found
         public void read(String alias, KeyPair keys, byte[] recordHash, RecordCallback callback) throws IOException {
             iterate(new EntryCallback() {
                 @Override
-                public void onEntry(ByteString blockHash, Block block, BlockEntry entry) {
+                public boolean onEntry(ByteString blockHash, Block block, BlockEntry entry) {
                     final ByteString rh = entry.getRecordHash();
                     // System.out.println("RecordHash:" + new String(BCUtils.encodeBase64URL(rh.toByteArray())));
                     if (recordHash == null || Arrays.equals(rh.toByteArray(), recordHash)) {
@@ -326,13 +326,16 @@ public class BC {
                                     byte[] key = a.getSecretKey().toByteArray();
                                     byte[] decryptedKey = BCUtils.decryptRSA(keys.getPrivate(), key);
                                     byte[] decryptedPayload = BCUtils.decryptAES(decryptedKey, record.getPayload().toByteArray());
-                                    callback.onRecord(blockHash, block, entry, key, decryptedPayload);
+                                    if (!callback.onRecord(blockHash, block, entry, decryptedKey, decryptedPayload)) {
+                                        return false;
+                                    }
                                 } catch (BadPaddingException | IllegalBlockSizeException | InvalidAlgorithmParameterException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
                                     e.printStackTrace();
                                 }
                             }
                         }
                     }
+                    return true;
                 }
             });
         }

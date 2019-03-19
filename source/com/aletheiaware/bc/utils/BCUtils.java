@@ -181,39 +181,33 @@ public final class BCUtils {
     }
 
     public static Reference getHead(InetAddress address, Reference reference) throws IOException {
-        if (address == null) {
-            return null;
+        try (Socket s = new Socket(address, PORT_HEAD)) {
+            InputStream in = s.getInputStream();
+            OutputStream out = s.getOutputStream();
+            reference.writeDelimitedTo(out);
+            out.flush();
+            return Reference.parseDelimitedFrom(in);
         }
-        Socket s = new Socket(address, PORT_HEAD);
-        InputStream in = s.getInputStream();
-        OutputStream out = s.getOutputStream();
-        reference.writeDelimitedTo(out);
-        out.flush();
-        return Reference.parseDelimitedFrom(in);
     }
 
     public static Block getBlock(InetAddress address, Reference reference) throws IOException {
-        if (address == null) {
-            return null;
+        try (Socket s = new Socket(address, PORT_BLOCK)) {
+            InputStream in = s.getInputStream();
+            OutputStream out = s.getOutputStream();
+            reference.writeDelimitedTo(out);
+            out.flush();
+            return Block.parseDelimitedFrom(in);
         }
-        Socket s = new Socket(address, PORT_BLOCK);
-        InputStream in = s.getInputStream();
-        OutputStream out = s.getOutputStream();
-        reference.writeDelimitedTo(out);
-        out.flush();
-        return Block.parseDelimitedFrom(in);
     }
 
     public static Reference setBlock(InetAddress address, Block block) throws IOException {
-        if (address == null) {
-            return null;
+        try (Socket s = new Socket(address, PORT_CAST)) {
+            InputStream in = s.getInputStream();
+            OutputStream out = s.getOutputStream();
+            block.writeDelimitedTo(out);
+            out.flush();
+            return Reference.parseDelimitedFrom(in);
         }
-        Socket s = new Socket(address, PORT_CAST);
-        InputStream in = s.getInputStream();
-        OutputStream out = s.getOutputStream();
-        block.writeDelimitedTo(out);
-        out.flush();
-        return Reference.parseDelimitedFrom(in);
     }
 
     public static byte[] encodeBase64(byte[] data) {
