@@ -117,7 +117,9 @@ public final class BCUtils {
     public static final long MAX_PAYLOAD_SIZE_BYTES = 10L * 1024 * 1024;// 10Mb
 
     public static final String BC_HOST = "bc.aletheiaware.com";
+    public static final String BC_HOST_TEST = "test-bc.aletheiaware.com";
     public static final String BC_WEBSITE = "https://bc.aletheiaware.com";
+    public static final String BC_WEBSITE_TEST = "https://test-bc.aletheiaware.com";
 
     public static final String AES = "AES";
     public static final String AES_CIPHER = "AES/GCM/NoPadding";
