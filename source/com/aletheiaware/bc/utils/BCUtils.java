@@ -99,11 +99,15 @@ public final class BCUtils {
     public static final int RSA_KEY_SIZE_BITS = 4096;
 
     public static final long THRESHOLD_NONE = 0;
-    public static final long THRESHOLD_LITE = 264; // 33/64
-    public static final long THRESHOLD_STANDARD = 272; // 17/32
-    public static final long THRESHOLD_PVB_HOUR = 288; // 9/16
-    public static final long THRESHOLD_PVB_DAY = 320; // 5/8
-    public static final long THRESHOLD_PVB_YEAR = 384; // 3/4
+    public static final long THRESHOLD_EASIEST = 264; // 33/64
+    public static final long THRESHOLD_EASY = 272; // 17/32
+    public static final long THRESHOLD_STANDARD = 288; // 9/16
+    public static final long THRESHOLD_HARD = 320; // 5/8
+    public static final long THRESHOLD_HARDEST = 384; // 3/4
+
+    public static final long THRESHOLD_PVB_HOUR = THRESHOLD_STANDARD;
+    public static final long THRESHOLD_PVB_DAY = THRESHOLD_HARD;
+    public static final long THRESHOLD_PVB_YEAR = THRESHOLD_HARDEST;
 
     public static final int PORT_BLOCK = 22222;
     public static final int PORT_HEAD = 22322;
