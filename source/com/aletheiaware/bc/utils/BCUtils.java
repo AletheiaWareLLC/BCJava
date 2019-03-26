@@ -187,6 +187,9 @@ public final class BCUtils {
     }
 
     public static Reference getHead(InetAddress address, Reference reference) throws IOException {
+        if (address == null) {
+            return null;
+        }
         try (Socket s = new Socket(address, PORT_HEAD)) {
             InputStream in = s.getInputStream();
             OutputStream out = s.getOutputStream();
@@ -197,6 +200,9 @@ public final class BCUtils {
     }
 
     public static Block getBlock(InetAddress address, Reference reference) throws IOException {
+        if (address == null) {
+            return null;
+        }
         try (Socket s = new Socket(address, PORT_BLOCK)) {
             InputStream in = s.getInputStream();
             OutputStream out = s.getOutputStream();
@@ -207,6 +213,9 @@ public final class BCUtils {
     }
 
     public static Reference setBlock(InetAddress address, Block block) throws IOException {
+        if (address == null) {
+            return null;
+        }
         try (Socket s = new Socket(address, PORT_CAST)) {
             InputStream in = s.getInputStream();
             OutputStream out = s.getOutputStream();
