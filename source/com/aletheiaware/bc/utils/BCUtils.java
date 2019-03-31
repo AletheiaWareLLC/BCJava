@@ -506,7 +506,7 @@ public final class BCUtils {
     /**
      * Exports the given alias and keys to the BC server for importing to another device.
      */
-    public static void exportKeyPair(File directory, String alias, char[] password, KeyPair keys, byte[] accessCode) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
+    public static void exportKeyPair(String host, File directory, String alias, char[] password, KeyPair keys, byte[] accessCode) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
         String publicKeyFormat = keys.getPublic().getFormat().replaceAll("\\.", "");// Remove dot from X.509
         String privateKeyFormat = keys.getPrivate().getFormat().replaceAll("#", "");// Remove hash from PKCS#8
         byte[] publicKeyBytes = keys.getPublic().getEncoded();
@@ -522,7 +522,7 @@ public final class BCUtils {
         System.out.println("Params:" + params);
         byte[] data = params.getBytes(StandardCharsets.UTF_8);
 
-        URL url = new URL(BC_WEBSITE + "/keys");
+        URL url = new URL(host + "/keys");
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setInstanceFollowRedirects(false);
@@ -547,8 +547,8 @@ public final class BCUtils {
     /**
      * Get the key share for the given alias from the BC server.
      */
-    public static KeyShare getKeyShare(String alias) throws IOException {
-        URL url = new URL(BC_WEBSITE + "/keys?alias=" + URLEncoder.encode(alias, "utf-8"));
+    public static KeyShare getKeyShare(String host, String alias) throws IOException {
+        URL url = new URL(host + "/keys?alias=" + URLEncoder.encode(alias, "utf-8"));
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setInstanceFollowRedirects(false);
         conn.setRequestMethod("GET");
