@@ -116,6 +116,8 @@ public final class BCUtils {
     public static final long MAX_BLOCK_SIZE_BYTES = 2L * 1024 * 1024 * 1024;// 2Gb
     public static final long MAX_PAYLOAD_SIZE_BYTES = 10L * 1024 * 1024;// 10Mb
 
+    public static final String TAG = "BC";
+
     public static final String BC_HOST = "bc.aletheiaware.com";
     public static final String BC_HOST_TEST = "test-bc.aletheiaware.com";
     public static final String BC_WEBSITE = "https://bc.aletheiaware.com";
@@ -501,6 +503,94 @@ public final class BCUtils {
         File pubFile = new File(directory, alias + PUBLIC_KEY_EXT);
         writeFile(privFile, encryptAES(password, privateKeyBytes));
         writeFile(pubFile, publicKeyBytes);
+    }
+
+    /**
+     * Register new customer
+     */
+    public static String register(String url, String alias, String email, String paymentId) throws IOException {
+        String params = "api=1&alias=" + URLEncoder.encode(alias, "utf-8")
+                + "&stripeToken=" + URLEncoder.encode(paymentId, "utf-8")
+                + "&stripeEmail=" + URLEncoder.encode(email, "utf-8");
+        System.out.println("Params:" + params);
+        return postForID(new URL(url), params.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Subscribe existing customer
+     */
+    public static String subscribe(String url, String alias, String customerId) throws IOException {
+        String params = "api=1&alias=" + URLEncoder.encode(alias, "utf-8")
+                + "&customerId=" + URLEncoder.encode(customerId, "utf-8");
+        System.out.println("Params:" + params);
+        return postForID(new URL(url), params.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static String postForID(URL url, byte[] data) throws IOException {
+        HttpsURLConnection conn = postForm(url, data);
+        int response = conn.getResponseCode();
+        System.out.println("Response: " + response);
+        StringBuilder sb = new StringBuilder();
+        if (response == HttpsURLConnection.HTTP_OK) {
+            try (InputStream in = conn.getInputStream()) {
+                Scanner s = new Scanner(in);
+                while (s.hasNextLine()) {
+                    sb.append(s.nextLine());
+                    sb.append("\n");
+                }
+            }
+            return sb.toString();
+        } else {
+            try (InputStream err = conn.getErrorStream()) {
+                Scanner s = new Scanner(err);
+                while (s.hasNextLine()) {
+                    sb.append(s.nextLine());
+                    sb.append("\n");
+                }
+            }
+            System.err.println("Error: " + sb.toString());
+        }
+        return null;
+    }
+
+    public static Reference postForReference(URL url, byte[] data) throws IOException {
+        HttpsURLConnection conn = postForm(url, data);
+        int response = conn.getResponseCode();
+        System.out.println("Response: " + response);
+        if (response == HttpsURLConnection.HTTP_OK) {
+            try (InputStream in = conn.getInputStream()) {
+                return Reference.parseDelimitedFrom(in);
+            }
+        } else {
+            StringBuilder sb = new StringBuilder();
+            try (InputStream err = conn.getErrorStream()) {
+                Scanner s = new Scanner(err);
+                while (s.hasNextLine()) {
+                    sb.append(s.nextLine());
+                    sb.append("\n");
+                }
+            }
+            System.err.println("Error: " + sb.toString());
+        }
+        return null;
+    }
+
+    public static HttpsURLConnection postForm(URL url, byte[] data) throws IOException {
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setInstanceFollowRedirects(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setRequestProperty("charset", "utf-8");
+        conn.setRequestProperty("Connection", "Keep-Alive");
+        conn.setRequestProperty("Keep-Alive", "timeout=60000");
+        conn.setRequestProperty("Content-Length", Integer.toString(data.length));
+        conn.setUseCaches(false);
+        try (OutputStream out = conn.getOutputStream()) {
+            out.write(data);
+            out.flush();
+        }
+        return conn;
     }
 
     /**
