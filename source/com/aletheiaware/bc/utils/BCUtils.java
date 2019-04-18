@@ -727,24 +727,36 @@ public final class BCUtils {
             System.err.println("Payload too large: " + BCUtils.sizeToString(payload.length) + " max: " + BCUtils.sizeToString(BCUtils.MAX_PAYLOAD_SIZE_BYTES));
             return null;
         }
-        byte[] key = generateSecretKey(AES_KEY_SIZE_BYTES);
-        byte[] encryptedPayload = encryptAES(key, payload);
-        byte[] signature = sign(keys.getPrivate(), encryptedPayload);
-        List<Record.Access> access = new ArrayList<>(acl.size());
-        for (String a : acl.keySet()) {
-            byte[] k = encryptRSA(acl.get(a), key);
-            access.add(Record.Access.newBuilder()
-                .setAlias(a)
-                .setSecretKey(ByteString.copyFrom(k))
-                .setEncryptionAlgorithm(EncryptionAlgorithm.RSA_ECB_OAEPPADDING)
-                .build());
+        EncryptionAlgorithm encryption = EncryptionAlgorithm.UNKNOWN_ENCRYPTION;
+        int as = acl.size();
+        List<Record.Access> access = new ArrayList<>(as);
+        // If Access Control List Declared
+        if (as > 0) {
+            // Set Encryption
+            encryption = EncryptionAlgorithm.AES_GCM_NOPADDING;
+            // Generate AES Key
+            byte[] key = generateSecretKey(AES_KEY_SIZE_BYTES);
+            // Encrypt Payload
+            payload = encryptAES(key, payload);
+            // For each access
+            for (String a : acl.keySet()) {
+                // Encrypt AES Key with RSA Public Key
+                byte[] k = encryptRSA(acl.get(a), key);
+                // Create Access
+                access.add(Record.Access.newBuilder()
+                    .setAlias(a)
+                    .setSecretKey(ByteString.copyFrom(k))
+                    .setEncryptionAlgorithm(EncryptionAlgorithm.RSA_ECB_OAEPPADDING)
+                    .build());
+            }
         }
+        byte[] signature = sign(keys.getPrivate(), payload);
         return Record.newBuilder()
             .setTimestamp(System.currentTimeMillis() * 1000000)// Convert milli to nano seconds
             .setCreator(alias)
             .addAllAccess(access)
-            .setPayload(ByteString.copyFrom(encryptedPayload))
-            .setEncryptionAlgorithm(EncryptionAlgorithm.AES_GCM_NOPADDING)
+            .setPayload(ByteString.copyFrom(payload))
+            .setEncryptionAlgorithm(encryption)
             .setSignature(ByteString.copyFrom(signature))
             .setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
             .addAllReference(references)
