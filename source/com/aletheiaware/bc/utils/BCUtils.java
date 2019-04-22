@@ -120,8 +120,6 @@ public final class BCUtils {
 
     public static final String BC_HOST = "bc.aletheiaware.com";
     public static final String BC_HOST_TEST = "test-bc.aletheiaware.com";
-    public static final String BC_WEBSITE = "https://bc.aletheiaware.com";
-    public static final String BC_WEBSITE_TEST = "https://test-bc.aletheiaware.com";
 
     public static final String AES = "AES";
     public static final String AES_CIPHER = "AES/GCM/NoPadding";
