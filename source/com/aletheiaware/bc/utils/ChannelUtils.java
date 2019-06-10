@@ -50,7 +50,7 @@ public class ChannelUtils {
 
     public static void update(Channel channel, Cache cache, ByteString hash, Block block) throws NoSuchAlgorithmException {
         ByteString head = channel.getHead();
-        if (head.equals(hash)) {
+        if (head != null && head.equals(hash)) {
             // Channel up to date
             return;
         }
@@ -221,6 +221,10 @@ public class ChannelUtils {
 
     public static void pull(Channel channel, Cache cache, Network network) throws NoSuchAlgorithmException {
         Reference reference = network.getHead(channel.getName());
+        if (reference == null) {
+            // Nothing to do
+            return;
+        }
         ByteString hash = reference.getBlockHash();
         if (hash.equals(channel.getHead())) {
             // Channel up-to-date
