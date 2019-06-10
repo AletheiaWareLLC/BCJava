@@ -44,7 +44,7 @@ public class FileCache implements Cache {
     public Reference getHead(String channel) {
         String filename = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         File file = new File(new File(directory, "channel"), filename);
-        if (file.exists()) {
+        if (file.exists() && file.isFile()) {
             try (FileInputStream in = new FileInputStream(file)) {
                 return Reference.parseFrom(in);
             } catch (IOException e) {
@@ -59,7 +59,7 @@ public class FileCache implements Cache {
     public Block getBlock(ByteString hash) {
         String filename = new String(BCUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
         File file = new File(new File(directory, "block"), filename);
-        if (file.exists()) {
+        if (file.exists() && file.isFile()) {
             try (FileInputStream in = new FileInputStream(file)) {
                 return Block.parseFrom(in);
             } catch (IOException e) {
@@ -77,13 +77,15 @@ public class FileCache implements Cache {
         List<BlockEntry> entries = new ArrayList<>();
         if (dir.exists() && dir.isDirectory()) {
             for (File file : dir.listFiles()) {
-                Long t = Long.parseLong(file.getName());
-                if (t >= timestamp) {
-                    try (FileInputStream in = new FileInputStream(file)) {
-                        entries.add(BlockEntry.parseFrom(in));
-                    } catch (IOException e) {
-                        /* Ignored */
-                        e.printStackTrace();
+                if (file.isFile()) {
+                    Long t = Long.parseLong(file.getName());
+                    if (t >= timestamp) {
+                        try (FileInputStream in = new FileInputStream(file)) {
+                            entries.add(BlockEntry.parseFrom(in));
+                        } catch (IOException e) {
+                            /* Ignored */
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
