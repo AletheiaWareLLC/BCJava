@@ -97,7 +97,7 @@ public final class BCUtils {
     public static final String BC_HOST = "bc.aletheiaware.com";
     public static final String BC_HOST_TEST = "test-bc.aletheiaware.com";
 
-    private static final DateFormat FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final DateFormat FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private BCUtils() {}
 

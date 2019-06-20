@@ -51,8 +51,8 @@ public class PoWChannel implements ThresholdChannel {
     }
 
     @Override
-    public void validate(Cache cache, ByteString hash, Block block) {
-        ChannelUtils.iterate(hash, block, cache, new BlockCallback() {
+    public void validate(Cache cache, Network network, ByteString hash, Block block) {
+        ChannelUtils.iterate(name, hash, block, cache, network, new BlockCallback() {
             @Override
             public boolean onBlock(ByteString blockHash, Block block) {
                 // Check hash ones pass threshold

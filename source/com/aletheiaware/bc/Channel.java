@@ -33,7 +33,7 @@ public interface Channel {
 
     void setTimestamp(long timestamp);
 
-    void validate(Cache cache, ByteString hash, Block block);
+    void validate(Cache cache, Network network, ByteString hash, Block block);
 
     public interface BlockCallback {
         boolean onBlock(ByteString blockHash, Block block);

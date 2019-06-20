@@ -48,7 +48,7 @@ public class ChannelUtils {
 
     private ChannelUtils() {}
 
-    public static void update(Channel channel, Cache cache, ByteString hash, Block block) throws NoSuchAlgorithmException {
+    public static void update(Channel channel, Cache cache, Network network, ByteString hash, Block block) throws NoSuchAlgorithmException {
         ByteString head = channel.getHead();
         if (head != null && head.equals(hash)) {
             // Channel up to date
@@ -68,7 +68,7 @@ public class ChannelUtils {
             }
         }
 
-        channel.validate(cache, hash, block);
+        channel.validate(cache, network, hash, block);
 
         channel.setTimestamp(block.getTimestamp());
         channel.setHead(hash);
@@ -81,8 +81,8 @@ public class ChannelUtils {
         cache.putBlock(hash, block);
     }
 
-    public static void readKey(ByteString hash, Block block, Cache cache, String alias, KeyPair key, ByteString recordHash, KeyCallback callback) throws IOException {
-        iterate(hash, block, cache, new BlockCallback() {
+    public static void readKey(String channel, ByteString hash, Block block, Cache cache, Network network, String alias, KeyPair key, ByteString recordHash, KeyCallback callback) throws IOException {
+        iterate(channel, hash, block, cache, network, new BlockCallback() {
             @Override
             public boolean onBlock(ByteString blockHash, Block block) {
                 for (BlockEntry entry : block.getEntryList()) {
@@ -117,8 +117,8 @@ public class ChannelUtils {
         });
     }
 
-    public static void read(ByteString hash, Block block, Cache cache, String alias, KeyPair key, ByteString recordHash, RecordCallback callback) throws IOException {
-        iterate(hash, block, cache, new BlockCallback() {
+    public static void read(String channel, ByteString hash, Block block, Cache cache, Network network, String alias, KeyPair key, ByteString recordHash, RecordCallback callback) throws IOException {
+        iterate(channel, hash, block, cache, network, new BlockCallback() {
             @Override
             public boolean onBlock(ByteString blockHash, Block block) {
                 for (BlockEntry entry : block.getEntryList()) {
@@ -154,13 +154,13 @@ public class ChannelUtils {
         });
     }
 
-    public static void iterate(ByteString hash, Block block, Cache cache, BlockCallback callback) {
+    public static void iterate(String channel, ByteString hash, Block block, Cache cache, Network network, BlockCallback callback) {
         if (hash == null || hash.isEmpty()) {
             return;
         }
         Block b = block;
         if (b == null) {
-            b = cache.getBlock(hash);
+            b = getBlock(channel, cache, network, hash);
         }
         // Iterate throught each block in the chain
         while (b != null) {
@@ -171,7 +171,7 @@ public class ChannelUtils {
             if (hash == null || hash.isEmpty()) {
                 b = null;
             } else {
-                b = cache.getBlock(hash);
+                b = getBlock(channel, cache, network, hash);
             }
         }
     }
@@ -241,7 +241,7 @@ public class ChannelUtils {
                 b = null;
             }
         }
-        update(channel, cache, hash, block);
+        update(channel, cache, network, hash, block);
     }
 
     public static void push(Channel channel, Cache cache, Network network) {

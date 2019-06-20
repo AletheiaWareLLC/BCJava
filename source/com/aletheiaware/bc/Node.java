@@ -81,7 +81,7 @@ public class Node {
     public long getLastMinedTimestamp(Channel channel) {
         long[] timestamp = {0L};
         // Iterate through the chain to find the most recent block mined by this node
-        ChannelUtils.iterate(channel.getHead(), null, cache, new BlockCallback() {
+        ChannelUtils.iterate(channel.getName(), channel.getHead(), null, cache, network, new BlockCallback() {
             @Override
             public boolean onBlock(ByteString hash, Block block) {
                 if (alias.equals(block.getMiner())) {
@@ -143,7 +143,7 @@ public class Node {
                 if (listener != null) {
                     listener.onMiningThresholdReached(channel, hash, block);
                 }
-                ChannelUtils.update(channel, cache, ByteString.copyFrom(hash), block);
+                ChannelUtils.update(channel, cache, network, ByteString.copyFrom(hash), block);
                 ChannelUtils.push(channel, cache, network);
                 return new Pair(hash, block);
             }
