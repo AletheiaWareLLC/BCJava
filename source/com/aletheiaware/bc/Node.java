@@ -99,6 +99,10 @@ public class Node {
 
         List<BlockEntry> entries = cache.getBlockEntries(channel.getName(), timestamp);
     
+        if (entries.isEmpty()) {
+            throw new IllegalArgumentException(String.format(BC.ERROR_NO_ENTRIES_TO_MINE, channel.getName()));
+        }
+
         // TODO check record signature of each entry
 
         Block.Builder bb = Block.newBuilder()

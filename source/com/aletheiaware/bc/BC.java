@@ -71,5 +71,6 @@ public class BC {
     public static final String ERROR_PAYLOAD_TOO_LARGE = "Payload too large: %s max: %s";
     public static final String ERROR_BLOCK_TOO_LARGE = "Block too large: %s max: %s";
     public static final String ERROR_NONCE_WRAP_AROUND = "Nonce wrapped around before reaching threshold";
+    public static final String ERROR_NO_ENTRIES_TO_MINE = "No entries to mine for channel: %s";
 
 }
