@@ -252,7 +252,7 @@ public final class BCUtils {
                     sb.append("\n");
                 }
             }
-            return sb.toString();
+            return sb.toString().trim();
         } else {
             try (InputStream err = conn.getErrorStream()) {
                 Scanner s = new Scanner(err);
