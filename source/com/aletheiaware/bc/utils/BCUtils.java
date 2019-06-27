@@ -101,6 +101,10 @@ public final class BCUtils {
 
     private BCUtils() {}
 
+    public static String getBCHostname(boolean debug) {
+        return debug ? BC_HOST_TEST : BC_HOST;
+    }
+
     public static String sizeToString(long size) {
         if (size <= 1024) {
             return String.format("%dbytes", size);
