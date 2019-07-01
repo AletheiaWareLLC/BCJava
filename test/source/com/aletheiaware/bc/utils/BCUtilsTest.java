@@ -16,10 +16,27 @@
 
 package com.aletheiaware.bc.utils;
 
+import com.aletheiaware.bc.Crypto;
+
+import java.security.KeyPair;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 public class BCUtilsTest {
+
+    private static KeyPair keys = null;
+
+    public static String getTestAlias() {
+        return "Alice";
+    }
+
+    public static KeyPair getTestKeys() throws Exception {
+        if (keys == null) {
+            keys = Crypto.createRSAKeyPair();
+        }
+        return keys;
+    }
 
     @Test
     public void testSizeToString() throws Exception {

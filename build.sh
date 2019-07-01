@@ -20,7 +20,8 @@ set -x
 if [ -d out ]; then
     rm -r out
 fi
-mkdir out
+mkdir -p out/code
+mkdir -p out/test
 
 SOURCES=(
     source/com/aletheiaware/bc/BC.java
@@ -43,8 +44,8 @@ PROTO_SOURCES=(
 )
 
 # Compile code
-javac -cp libs/protobuf-lite-3.0.1.jar ${SOURCES[*]} ${PROTO_SOURCES[*]} -d out
-jar cvf out/BCJava.jar -C out .
+javac -cp libs/protobuf-lite-3.0.1.jar ${SOURCES[*]} ${PROTO_SOURCES[*]} -d out/code
+jar cvf out/BCJava.jar -C out/code .
 
 TEST_SOURCES=(
     test/source/com/aletheiaware/bc/AllTests.java
@@ -59,8 +60,8 @@ TEST_SOURCES=(
 )
 
 # Compile tests
-javac -cp libs/protobuf-lite-3.0.1.jar:libs/junit-4.12.jar:libs/hamcrest-core-1.3.jar:libs/mockito-all-1.10.19.jar:out/BCJava.jar ${TEST_SOURCES[*]} -d out
-jar cvf out/BCJavaTest.jar -C out .
+javac -cp libs/protobuf-lite-3.0.1.jar:libs/junit-4.12.jar:libs/hamcrest-core-1.3.jar:libs/mockito-all-1.10.19.jar:out/BCJava.jar ${TEST_SOURCES[*]} -d out/test
+jar cvf out/BCJavaTest.jar -C out/test .
 
 # Run tests
 java -cp libs/protobuf-lite-3.0.1.jar:libs/junit-4.12.jar:libs/hamcrest-core-1.3.jar:libs/mockito-all-1.10.19.jar:out/BCJava.jar:out/BCJavaTest.jar org.junit.runner.JUnitCore com.aletheiaware.bc.AllTests

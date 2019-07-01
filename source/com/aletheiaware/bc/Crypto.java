@@ -277,11 +277,18 @@ public final class Crypto {
     /*
      * Create a random RSA key pair.
      */
-    public static KeyPair createRSAKeyPair(File directory, String alias, char[] password) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
-        System.out.println("Creating " + RSA_KEY_SIZE_BITS + "bit " + RSA + " key pair: " + alias);
+    public static KeyPair createRSAKeyPair() throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA);
         generator.initialize(RSA_KEY_SIZE_BITS);
-        KeyPair pair = generator.genKeyPair();
+        return generator.genKeyPair();
+    }
+
+    /*
+     * Create a random RSA key pair.
+     */
+    public static KeyPair createRSAKeyPair(File directory, String alias, char[] password) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
+        System.out.println("Creating " + RSA_KEY_SIZE_BITS + "bit " + RSA + " key pair: " + alias);
+        KeyPair pair = createRSAKeyPair();
         writeRSAKeyPair(directory, alias, password, pair);
         return pair;
     }
