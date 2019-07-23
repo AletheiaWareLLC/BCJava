@@ -22,8 +22,9 @@ import com.aletheiaware.bc.BCProto.Record;
 import com.aletheiaware.bc.BCProto.Reference;
 import com.aletheiaware.bc.Channel.BlockCallback;
 import com.aletheiaware.bc.utils.BCUtils;
-import com.aletheiaware.bc.utils.BCUtils.Pair;
 import com.aletheiaware.bc.utils.ChannelUtils;
+import com.aletheiaware.common.utils.CommonUtils;
+import com.aletheiaware.common.utils.CommonUtils.Pair;
 
 import com.google.protobuf.ByteString;
 
@@ -123,7 +124,7 @@ public class Node {
 
         long size = bb.build().getSerializedSize();
         if (size > BC.MAX_BLOCK_SIZE_BYTES) {
-            throw new IllegalArgumentException(String.format(BC.ERROR_BLOCK_TOO_LARGE, BCUtils.sizeToString(size), BCUtils.sizeToString(BC.MAX_BLOCK_SIZE_BYTES)));
+            throw new IllegalArgumentException(String.format(BC.ERROR_BLOCK_TOO_LARGE, CommonUtils.sizeToString(size), CommonUtils.sizeToString(BC.MAX_BLOCK_SIZE_BYTES)));
         }
 
         if (listener != null) {

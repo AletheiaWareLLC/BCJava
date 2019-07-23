@@ -28,6 +28,7 @@ import com.aletheiaware.bc.Channel.KeyCallback;
 import com.aletheiaware.bc.Channel.RecordCallback;
 import com.aletheiaware.bc.Crypto;
 import com.aletheiaware.bc.Network;
+import com.aletheiaware.common.utils.CommonUtils;
 
 import com.google.protobuf.ByteString;
 
@@ -72,7 +73,7 @@ public class ChannelUtils {
 
         channel.setTimestamp(block.getTimestamp());
         channel.setHead(hash);
-        System.out.println(channel.getName() + " updated to " + BCUtils.timeToString(block.getTimestamp()) + " " + new String(BCUtils.encodeBase64URL(hash.toByteArray())));
+        System.out.println(channel.getName() + " updated to " + CommonUtils.timeToString(block.getTimestamp()) + " " + new String(CommonUtils.encodeBase64URL(hash.toByteArray())));
         cache.putHead(channel.getName(), Reference.newBuilder()
                 .setTimestamp(block.getTimestamp())
                 .setChannelName(channel.getName())
@@ -87,7 +88,7 @@ public class ChannelUtils {
             public boolean onBlock(ByteString blockHash, Block block) {
                 for (BlockEntry entry : block.getEntryList()) {
                     final ByteString rh = entry.getRecordHash();
-                    // System.out.println("RecordHash:" + new String(BCUtils.encodeBase64URL(rh.toByteArray())));
+                    // System.out.println("RecordHash:" + new String(CommonUtils.encodeBase64URL(rh.toByteArray())));
                     if (rh.equals(recordHash)) {
                         final Record record = entry.getRecord();
                         if (record.getAccessCount() == 0) {
@@ -123,7 +124,7 @@ public class ChannelUtils {
             public boolean onBlock(ByteString blockHash, Block block) {
                 for (BlockEntry entry : block.getEntryList()) {
                     final ByteString rh = entry.getRecordHash();
-                    // System.out.println("RecordHash:" + new String(BCUtils.encodeBase64URL(rh.toByteArray())));
+                    // System.out.println("RecordHash:" + new String(CommonUtils.encodeBase64URL(rh.toByteArray())));
                     if (recordHash == null || rh.equals(recordHash)) {
                         final Record record = entry.getRecord();
                         if (record.getAccessCount() == 0) {

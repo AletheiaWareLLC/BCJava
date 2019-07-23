@@ -39,20 +39,7 @@ public class BCUtilsTest {
     }
 
     @Test
-    public void testSizeToString() throws Exception {
-        Assert.assertEquals("0bytes", BCUtils.sizeToString(0L));
-        Assert.assertEquals("64bytes", BCUtils.sizeToString(64L));
-        Assert.assertEquals("1.21Kb", BCUtils.sizeToString(1234L));
-        Assert.assertEquals("55.46Kb", BCUtils.sizeToString(56789L));
-        Assert.assertEquals("1.18Mb", BCUtils.sizeToString(1234567L));
-        Assert.assertEquals("8.29Gb", BCUtils.sizeToString(8901234567L));
-        Assert.assertEquals("8.10Tb", BCUtils.sizeToString(8901234567890L));
-        Assert.assertEquals("10.97Pb", BCUtils.sizeToString(12345678901234567L));
+    public void empty() {
+        // TODO
     }
-
-    @Test
-    public void testTimeToString() throws Exception {
-        Assert.assertEquals("2019-08-12 17:36:05", BCUtils.timeToString(1565656565656565656L));
-    }
-
 }

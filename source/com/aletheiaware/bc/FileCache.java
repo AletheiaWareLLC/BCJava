@@ -20,6 +20,7 @@ import com.aletheiaware.bc.BCProto.Block;
 import com.aletheiaware.bc.BCProto.BlockEntry;
 import com.aletheiaware.bc.BCProto.Reference;
 import com.aletheiaware.bc.utils.BCUtils;
+import com.aletheiaware.common.utils.CommonUtils;
 
 import com.google.protobuf.ByteString;
 
@@ -42,7 +43,7 @@ public class FileCache implements Cache {
 
     @Override
     public Reference getHead(String channel) {
-        String filename = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
+        String filename = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         File file = new File(new File(directory, "channel"), filename);
         if (file.exists() && file.isFile()) {
             try (FileInputStream in = new FileInputStream(file)) {
@@ -57,7 +58,7 @@ public class FileCache implements Cache {
 
     @Override
     public Block getBlock(ByteString hash) {
-        String filename = new String(BCUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
+        String filename = new String(CommonUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
         File file = new File(new File(directory, "block"), filename);
         if (file.exists() && file.isFile()) {
             try (FileInputStream in = new FileInputStream(file)) {
@@ -72,7 +73,7 @@ public class FileCache implements Cache {
 
     @Override
     public List<BlockEntry> getBlockEntries(String channel, long timestamp) {
-        String filename = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
+        String filename = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         File dir = new File(new File(directory, "entry"), filename);
         List<BlockEntry> entries = new ArrayList<>();
         if (dir.exists() && dir.isDirectory()) {
@@ -96,7 +97,7 @@ public class FileCache implements Cache {
 
     @Override
     public void putHead(String channel, Reference reference) {
-        String filename = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
+        String filename = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         File file = new File(new File(directory, "channel"), filename);
         try (FileOutputStream out = new FileOutputStream(file)) {
             reference.writeTo(out);
@@ -109,7 +110,7 @@ public class FileCache implements Cache {
 
     @Override
     public void putBlock(ByteString hash, Block block) {
-        String filename = new String(BCUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
+        String filename = new String(CommonUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
         File file = new File(new File(directory, "block"), filename);
         try (FileOutputStream out = new FileOutputStream(file)) {
             block.writeTo(out);
@@ -122,7 +123,7 @@ public class FileCache implements Cache {
 
     @Override
     public void putBlockEntry(String channel, BlockEntry entry) {
-        String filename = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
+        String filename = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         File dir = new File(new File(directory, "entry"), filename);
         dir.mkdirs();
         File file = new File(dir, entry.getRecord().getTimestamp() + "");

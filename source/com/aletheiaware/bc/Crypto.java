@@ -25,6 +25,7 @@ import com.aletheiaware.bc.BCProto.Reference;
 import com.aletheiaware.bc.BCProto.SignatureAlgorithm;
 import com.aletheiaware.bc.Channel.EntryCallback;
 import com.aletheiaware.bc.utils.BCUtils;
+import com.aletheiaware.common.utils.CommonUtils;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;
@@ -297,7 +298,7 @@ public final class Crypto {
      * Create an RSA key pair from the given private key format and bytes.
      */
     public static KeyPair importRSAKeyPair(File directory, String accessCode, KeyShare ks) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
-        byte[] key = BCUtils.decodeBase64URL(accessCode.getBytes("utf-8"));
+        byte[] key = CommonUtils.decodeBase64URL(accessCode.getBytes("utf-8"));
         KeySpec publicSpec = null;
         byte[] pub = ks.getPublicKey().toByteArray();
         switch (ks.getPublicFormat()) {
@@ -334,12 +335,12 @@ public final class Crypto {
         byte[] privateKeyBytes = pair.getPrivate().getEncoded();
         byte[] publicKeyBytes = pair.getPublic().getEncoded();
         if (alias == null || alias.isEmpty()) {
-            alias = new String(BCUtils.encodeBase64URL(getHash(publicKeyBytes)));
+            alias = new String(CommonUtils.encodeBase64URL(getHash(publicKeyBytes)));
         }
         File privFile = new File(directory, alias + PRIVATE_KEY_EXT);
         File pubFile = new File(directory, alias + PUBLIC_KEY_EXT);
-        BCUtils.writeFile(privFile, encryptAES(password, privateKeyBytes));
-        BCUtils.writeFile(pubFile, publicKeyBytes);
+        CommonUtils.writeFile(privFile, encryptAES(password, privateKeyBytes));
+        CommonUtils.writeFile(pubFile, publicKeyBytes);
     }
 
     /**
@@ -353,11 +354,11 @@ public final class Crypto {
         byte[] encryptedPrivateKeyBytes = encryptAES(accessCode, privateKeyBytes);
         byte[] encryptedPassword = encryptAES(accessCode, new String(password).getBytes("utf-8"));
         String params = "alias=" + URLEncoder.encode(alias, "utf-8")
-                + "&publicKey=" + new String(BCUtils.encodeBase64URL(publicKeyBytes), "utf-8")
+                + "&publicKey=" + new String(CommonUtils.encodeBase64URL(publicKeyBytes), "utf-8")
                 + "&publicKeyFormat=" + URLEncoder.encode(publicKeyFormat, "utf-8")
-                + "&privateKey=" + new String(BCUtils.encodeBase64URL(encryptedPrivateKeyBytes), "utf-8")
+                + "&privateKey=" + new String(CommonUtils.encodeBase64URL(encryptedPrivateKeyBytes), "utf-8")
                 + "&privateKeyFormat=" + URLEncoder.encode(privateKeyFormat, "utf-8")
-                + "&password=" + new String(BCUtils.encodeBase64URL(encryptedPassword), "utf-8");
+                + "&password=" + new String(CommonUtils.encodeBase64URL(encryptedPassword), "utf-8");
         System.out.println("Params:" + params);
         byte[] data = params.getBytes(StandardCharsets.UTF_8);
 
@@ -418,8 +419,8 @@ public final class Crypto {
     public static KeyPair getRSAKeyPair(File directory, String alias, char[] password) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, InvalidKeySpecException, InvalidParameterSpecException, NoSuchAlgorithmException, NoSuchPaddingException {
         File privFile = new File(directory, alias + PRIVATE_KEY_EXT);
         File pubFile = new File(directory, alias + PUBLIC_KEY_EXT);
-        byte[] privBytes = decryptAES(password, BCUtils.readFile(privFile));
-        byte[] pubBytes = BCUtils.readFile(pubFile);
+        byte[] privBytes = decryptAES(password, CommonUtils.readFile(privFile));
+        byte[] pubBytes = CommonUtils.readFile(pubFile);
         PrivateKey privKey = KeyFactory.getInstance(RSA).generatePrivate(new PKCS8EncodedKeySpec(privBytes));
         PublicKey pubKey = KeyFactory.getInstance(RSA).generatePublic(new X509EncodedKeySpec(pubBytes));
         return new KeyPair(pubKey, privKey);

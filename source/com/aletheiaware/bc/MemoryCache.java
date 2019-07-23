@@ -20,6 +20,7 @@ import com.aletheiaware.bc.BCProto.Block;
 import com.aletheiaware.bc.BCProto.BlockEntry;
 import com.aletheiaware.bc.BCProto.Reference;
 import com.aletheiaware.bc.utils.BCUtils;
+import com.aletheiaware.common.utils.CommonUtils;
 
 import com.google.protobuf.ByteString;
 
@@ -36,19 +37,19 @@ public class MemoryCache implements Cache {
 
     @Override
     public Reference getHead(String channel) {
-        String key = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
+        String key = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         return heads.get(key);
     }
 
     @Override
     public Block getBlock(ByteString hash) {
-        String key = new String(BCUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
+        String key = new String(CommonUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
         return blocks.get(key);
     }
 
     @Override
     public List<BlockEntry> getBlockEntries(String channel, long timestamp) {
-        String key = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
+        String key = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         List<BlockEntry> es = entries.get(key);
         List<BlockEntry> results = new ArrayList<>();
         if (es != null) {
@@ -63,19 +64,19 @@ public class MemoryCache implements Cache {
 
     @Override
     public void putHead(String channel, Reference reference) {
-        String key = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
+        String key = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         heads.put(key, reference);
     }
 
     @Override
     public void putBlock(ByteString hash, Block block) {
-        String key = new String(BCUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
+        String key = new String(CommonUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
         blocks.put(key, block);
     }
 
     @Override
     public void putBlockEntry(String channel, BlockEntry entry) {
-        String key = new String(BCUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
+        String key = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         List<BlockEntry> es = entries.get(key);
         if (es == null) {
             es = new ArrayList<>();

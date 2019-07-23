@@ -20,6 +20,7 @@ import com.aletheiaware.bc.BCProto.Block;
 import com.aletheiaware.bc.BCProto.Reference;
 import com.aletheiaware.bc.utils.BCUtils;
 import com.aletheiaware.bc.utils.ChannelUtils;
+import com.aletheiaware.common.utils.CommonUtils;
 
 import com.google.protobuf.ByteString;
 
@@ -91,7 +92,7 @@ public class TCPNetwork implements Network {
                     ByteString remote = reference.getBlockHash();
                     if (remote.equals(hash)) {
                         // Broadcast accepted
-                        System.out.println("Broadcast " + channel.getName() + " block " + new String(BCUtils.encodeBase64URL(hash.toByteArray())) + " to " + address);
+                        System.out.println("Broadcast " + channel.getName() + " block " + new String(CommonUtils.encodeBase64URL(hash.toByteArray())) + " to " + address);
                         break;
                     } else {
                         // Broadcast rejected
