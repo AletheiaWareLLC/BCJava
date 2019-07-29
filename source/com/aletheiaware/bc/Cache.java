@@ -32,6 +32,8 @@ public interface Cache {
 
     List<BlockEntry> getBlockEntries(String channel, long timestamp);
 
+    Block getBlockContainingRecord(String channel, ByteString hash);
+
     void putHead(String channel, Reference reference);
 
     void putBlock(ByteString hash, Block block);

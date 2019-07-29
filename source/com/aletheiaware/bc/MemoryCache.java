@@ -34,6 +34,7 @@ public class MemoryCache implements Cache {
     Map<String, Block> blocks = new HashMap<>();
     Map<String, Reference> heads = new HashMap<>();
     Map<String, List<BlockEntry>> entries = new HashMap<>();
+    Map<ByteString, Block> mapping = new HashMap<>();
 
     @Override
     public Reference getHead(String channel) {
@@ -63,6 +64,11 @@ public class MemoryCache implements Cache {
     }
 
     @Override
+    public Block getBlockContainingRecord(String channel, ByteString hash) {
+        return mapping.get(hash);
+    }
+
+    @Override
     public void putHead(String channel, Reference reference) {
         String key = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
         heads.put(key, reference);
@@ -70,6 +76,9 @@ public class MemoryCache implements Cache {
 
     @Override
     public void putBlock(ByteString hash, Block block) {
+        for (BlockEntry e : block.getEntryList()) {
+            mapping.put(e.getRecordHash(), block);
+        }
         String key = new String(CommonUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
         blocks.put(key, block);
     }

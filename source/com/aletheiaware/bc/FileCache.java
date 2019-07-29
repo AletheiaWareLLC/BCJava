@@ -43,8 +43,7 @@ public class FileCache implements Cache {
 
     @Override
     public Reference getHead(String channel) {
-        String filename = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
-        File file = new File(new File(directory, "channel"), filename);
+        File file = new File(new File(directory, "channel"), new String(CommonUtils.encodeBase64URL(channel.getBytes())));// Convert to Base64 for filesystem
         if (file.exists() && file.isFile()) {
             try (FileInputStream in = new FileInputStream(file)) {
                 return Reference.parseFrom(in);
@@ -58,8 +57,7 @@ public class FileCache implements Cache {
 
     @Override
     public Block getBlock(ByteString hash) {
-        String filename = new String(CommonUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
-        File file = new File(new File(directory, "block"), filename);
+        File file = new File(new File(directory, "block"), new String(CommonUtils.encodeBase64URL(hash.toByteArray())));// Convert to Base64 for filesystem
         if (file.exists() && file.isFile()) {
             try (FileInputStream in = new FileInputStream(file)) {
                 return Block.parseFrom(in);
@@ -73,8 +71,7 @@ public class FileCache implements Cache {
 
     @Override
     public List<BlockEntry> getBlockEntries(String channel, long timestamp) {
-        String filename = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
-        File dir = new File(new File(directory, "entry"), filename);
+        File dir = new File(new File(directory, "entry"), new String(CommonUtils.encodeBase64URL(channel.getBytes())));// Convert to Base64 for filesystem
         List<BlockEntry> entries = new ArrayList<>();
         if (dir.exists() && dir.isDirectory()) {
             for (File file : dir.listFiles()) {
@@ -96,9 +93,23 @@ public class FileCache implements Cache {
     }
 
     @Override
+    public Block getBlockContainingRecord(String channel, ByteString hash) {
+        File mapping = new File(new File(directory, "mapping"), new String(CommonUtils.encodeBase64URL(channel.getBytes())));// Convert to Base64 for filesystem
+        File file = new File(mapping, new String(CommonUtils.encodeBase64URL(hash.toByteArray())));// Convert to Base64 for filesystem
+        if (file.exists() && file.isFile()) {
+            try (FileInputStream in = new FileInputStream(file)) {
+                return getBlock(ByteString.readFrom(in));
+            } catch (IOException e) {
+                /* Ignored */
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void putHead(String channel, Reference reference) {
-        String filename = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
-        File file = new File(new File(directory, "channel"), filename);
+        File file = new File(new File(directory, "channel"), new String(CommonUtils.encodeBase64URL(channel.getBytes())));// Convert to Base64 for filesystem
         try (FileOutputStream out = new FileOutputStream(file)) {
             reference.writeTo(out);
             out.flush();
@@ -110,8 +121,19 @@ public class FileCache implements Cache {
 
     @Override
     public void putBlock(ByteString hash, Block block) {
-        String filename = new String(CommonUtils.encodeBase64URL(hash.toByteArray()));// Convert to Base64 for filesystem
-        File file = new File(new File(directory, "block"), filename);
+        File mapping = new File(new File(directory, "mapping"), new String(CommonUtils.encodeBase64URL(block.getChannelName().getBytes())));// Convert to Base64 for filesystem
+        mapping.mkdirs();
+        for (BlockEntry e : block.getEntryList()) {
+            File file = new File(mapping, new String(CommonUtils.encodeBase64URL(e.getRecordHash().toByteArray())));// Convert to Base64 for filesystem
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                hash.writeTo(out);
+                out.flush();
+            } catch (IOException ex) {
+                /* Ignored */
+                ex.printStackTrace();
+            }
+        }
+        File file = new File(new File(directory, "block"), new String(CommonUtils.encodeBase64URL(hash.toByteArray())));// Convert to Base64 for filesystem
         try (FileOutputStream out = new FileOutputStream(file)) {
             block.writeTo(out);
             out.flush();
@@ -123,8 +145,7 @@ public class FileCache implements Cache {
 
     @Override
     public void putBlockEntry(String channel, BlockEntry entry) {
-        String filename = new String(CommonUtils.encodeBase64URL(channel.getBytes()));// Convert to Base64 for filesystem
-        File dir = new File(new File(directory, "entry"), filename);
+        File dir = new File(new File(directory, "entry"), new String(CommonUtils.encodeBase64URL(channel.getBytes())));// Convert to Base64 for filesystem
         dir.mkdirs();
         File file = new File(dir, entry.getRecord().getTimestamp() + "");
         try (FileOutputStream out = new FileOutputStream(file)) {

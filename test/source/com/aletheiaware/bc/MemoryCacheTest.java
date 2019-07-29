@@ -86,4 +86,24 @@ public class MemoryCacheTest {
         Assert.assertEquals(5678, entries.get(0).getRecord().getTimestamp());
     }
 
+    @Test
+    public void testBlockContainingRecord() throws Exception {
+        MemoryCache cache = new MemoryCache();
+        Record record = Record.newBuilder()
+                .setTimestamp(1234)
+                .build();
+        ByteString recordHash = ByteString.copyFrom(Crypto.getProtobufHash(record));
+        Block block = Block.newBuilder()
+                .setTimestamp(1234)
+                .setChannelName("Test")
+                .addEntry(BlockEntry.newBuilder()
+                    .setRecordHash(recordHash)
+                    .setRecord(record))
+                .build();
+        ByteString hash = ByteString.copyFrom(Crypto.getProtobufHash(block));
+        Assert.assertNull(cache.getBlockContainingRecord("Test", recordHash));
+        cache.putBlock(hash, block);
+        Assert.assertEquals(block, cache.getBlockContainingRecord("Test", recordHash));
+    }
+
 }
