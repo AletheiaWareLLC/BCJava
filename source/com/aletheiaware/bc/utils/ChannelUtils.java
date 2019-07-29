@@ -207,6 +207,20 @@ public class ChannelUtils {
         return block;
     }
 
+    public static Block getBlockContainingRecord(String channel, Cache cache, Network network, ByteString hash) throws NoSuchAlgorithmException {
+        Block block = cache.getBlockContainingRecord(channel, hash);
+        if (block == null && network != null) {
+            block = network.getBlock(Reference.newBuilder()
+                    .setChannelName(channel)
+                    .setBlockHash(hash)
+                    .build());
+            if (block != null) {
+                cache.putBlock(ByteString.copyFrom(Crypto.getProtobufHash(block)), block);
+            }
+        }
+        return block;
+    }
+
     public static Reference writeRecord(String channel, Cache cache, Record record) throws NoSuchAlgorithmException {
         ByteString hash = ByteString.copyFrom(Crypto.getProtobufHash(record));
         cache.putBlockEntry(channel, BlockEntry.newBuilder()
