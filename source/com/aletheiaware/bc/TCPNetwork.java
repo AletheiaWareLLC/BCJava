@@ -82,39 +82,43 @@ public class TCPNetwork implements Network {
     @Override
     public void broadcast(Channel channel, Cache cache, ByteString hash, Block block) {
         for (InetAddress address : peers) {
-            try (Socket s = new Socket(address, PORT_BROADCAST)) {
-                InputStream in = s.getInputStream();
-                OutputStream out = s.getOutputStream();
-                for (;;) {
-                    block.writeDelimitedTo(out);
-                    out.flush();
-                    Reference reference = Reference.parseDelimitedFrom(in);
-                    ByteString remote = reference.getBlockHash();
-                    if (remote.equals(hash)) {
-                        // Broadcast accepted
-                        System.out.println("Broadcast " + channel.getName() + " block " + new String(CommonUtils.encodeBase64URL(hash.toByteArray())) + " to " + address);
-                        break;
-                    } else {
-                        // Broadcast rejected
-                        Block referencedBlock = ChannelUtils.getBlock(channel.getName(), cache, this, remote);
+            cast(address, channel.getName(), cache, hash, block);
+        }
+    }
 
-                        if (referencedBlock.getLength() == block.getLength()) {
-                            // Option A: remote points to a different chain of the same length, next chain to get a block mined on top wins
-                            break;
-                        } else if (referencedBlock.getLength() > block.getLength()) {
-                            // Option B: remote points to a longer chain
-                            throw new IllegalArgumentException(BC.ERROR_CHANNEL_OUT_OF_DATE);
-                            // TODO re-mine all dropped records into new blocks on top of new head
-                        } else {
-                            // Option C: remote points to a shorter chain, and cannot update because the host is missing some blocks
-                            block = referencedBlock;
-                        }
+    public void cast(InetAddress address, String channel, Cache cache, ByteString hash, Block block) {
+        try (Socket s = new Socket(address, PORT_BROADCAST)) {
+            InputStream in = s.getInputStream();
+            OutputStream out = s.getOutputStream();
+            for (;;) {
+                block.writeDelimitedTo(out);
+                out.flush();
+                Reference reference = Reference.parseDelimitedFrom(in);
+                ByteString remote = reference.getBlockHash();
+                if (remote.equals(hash)) {
+                    // Broadcast accepted
+                    System.out.println("Broadcast " + channel + " block " + new String(CommonUtils.encodeBase64URL(hash.toByteArray())) + " to " + address);
+                    break;
+                } else {
+                    // Broadcast rejected
+                    Block referencedBlock = ChannelUtils.getBlock(channel, cache, this, remote);
+
+                    if (referencedBlock.getLength() == block.getLength()) {
+                        // Option A: remote points to a different chain of the same length, next chain to get a block mined on top wins
+                        break;
+                    } else if (referencedBlock.getLength() > block.getLength()) {
+                        // Option B: remote points to a longer chain
+                        throw new IllegalArgumentException(BC.ERROR_CHANNEL_OUT_OF_DATE);
+                        // TODO re-mine all dropped records into new blocks on top of new head
+                    } else {
+                        // Option C: remote points to a shorter chain, and cannot update because the host is missing some blocks
+                        block = referencedBlock;
                     }
                 }
-            } catch (IOException e) {
-                /* Ignored */
-                e.printStackTrace();
             }
+        } catch (IOException e) {
+            /* Ignored */
+            e.printStackTrace();
         }
     }
 }
