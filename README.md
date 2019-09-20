@@ -14,7 +14,7 @@ Libraries
 Protocol Buffers
 
     cd <path/to/BC>
-    ./build.sh --javalite_out=<path/to/BCJava>/source/
+    ./build.sh --java_out=lite:<path/to/BCJava>/source/
 
 Build
 =====
