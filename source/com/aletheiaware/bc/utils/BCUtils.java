@@ -216,7 +216,7 @@ public final class BCUtils {
 
     public static Record createRecord(String alias, KeyPair keys, Map<String, PublicKey> acl, List<Reference> references, byte[] payload) throws BadPaddingException, IOException, IllegalBlockSizeException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, SignatureException {
         if (payload.length > BC.MAX_PAYLOAD_SIZE_BYTES) {
-            throw new IllegalArgumentException(String.format(BC.ERROR_PAYLOAD_TOO_LARGE, CommonUtils.sizeToString(payload.length), CommonUtils.sizeToString(BC.MAX_PAYLOAD_SIZE_BYTES)));
+            throw new IllegalArgumentException(String.format(BC.ERROR_PAYLOAD_TOO_LARGE, CommonUtils.binarySizeToString(payload.length), CommonUtils.binarySizeToString(BC.MAX_PAYLOAD_SIZE_BYTES)));
         }
         EncryptionAlgorithm encryption = EncryptionAlgorithm.UNKNOWN_ENCRYPTION;
         int as = acl.size();

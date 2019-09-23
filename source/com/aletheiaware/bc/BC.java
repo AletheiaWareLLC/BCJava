@@ -23,7 +23,6 @@ import com.aletheiaware.bc.BCProto.Record;
 import com.aletheiaware.bc.BCProto.Reference;
 import com.aletheiaware.bc.BCProto.SignatureAlgorithm;
 import com.aletheiaware.bc.utils.BCUtils;
-import com.aletheiaware.common.utils.CommonUtils.Pair;
 
 import com.google.protobuf.ByteString;
 

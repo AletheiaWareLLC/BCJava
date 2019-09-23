@@ -124,7 +124,7 @@ public class Node {
 
         long size = bb.build().getSerializedSize();
         if (size > BC.MAX_BLOCK_SIZE_BYTES) {
-            throw new IllegalArgumentException(String.format(BC.ERROR_BLOCK_TOO_LARGE, CommonUtils.sizeToString(size), CommonUtils.sizeToString(BC.MAX_BLOCK_SIZE_BYTES)));
+            throw new IllegalArgumentException(String.format(BC.ERROR_BLOCK_TOO_LARGE, CommonUtils.binarySizeToString(size), CommonUtils.binarySizeToString(BC.MAX_BLOCK_SIZE_BYTES)));
         }
 
         if (listener != null) {
