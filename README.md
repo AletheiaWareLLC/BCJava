@@ -5,11 +5,11 @@ This is a Java implementation of a blockchain using the BC data structures.
 
 Setup
 =====
-Libraries
+BCJava should be in the same parent directory as the following prerequisite projects;
 
-    mkdir libs
-    ln -s <awcommonjavalib> libs/AletheiaWareCommonJava.jar
-    ln -s <protolib> libs/protobuf-lite-3.0.1.jar
+    AletheiaWareCommonJava
+    BC
+    JavaCommon
 
 Protocol Buffers
 
