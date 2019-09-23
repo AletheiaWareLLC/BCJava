@@ -45,18 +45,20 @@ public class TCPNetwork implements Network {
     @Override
     public Reference getHead(String channel) {
         for (InetAddress address : peers) {
-            try (Socket s = new Socket(address, PORT_GET_HEAD)) {
-                InputStream in = s.getInputStream();
-                OutputStream out = s.getOutputStream();
-                Reference.newBuilder()
-                    .setChannelName(channel)
-                    .build()
-                    .writeDelimitedTo(out);
-                out.flush();
-                return Reference.parseDelimitedFrom(in);
-            } catch (IOException e) {
-                /* Ignored */
-                e.printStackTrace();
+            if (address != null) {
+                try (Socket s = new Socket(address, PORT_GET_HEAD)) {
+                    InputStream in = s.getInputStream();
+                    OutputStream out = s.getOutputStream();
+                    Reference.newBuilder()
+                        .setChannelName(channel)
+                        .build()
+                        .writeDelimitedTo(out);
+                    out.flush();
+                    return Reference.parseDelimitedFrom(in);
+                } catch (IOException e) {
+                    /* Ignored */
+                    e.printStackTrace();
+                }
             }
         }
         return null;
@@ -65,15 +67,17 @@ public class TCPNetwork implements Network {
     @Override
     public Block getBlock(Reference reference) {
         for (InetAddress address : peers) {
-            try (Socket s = new Socket(address, PORT_GET_BLOCK)) {
-                InputStream in = s.getInputStream();
-                OutputStream out = s.getOutputStream();
-                reference.writeDelimitedTo(out);
-                out.flush();
-                return Block.parseDelimitedFrom(in);
-            } catch (IOException e) {
-                /* Ignored */
-                e.printStackTrace();
+            if (address != null) {
+                try (Socket s = new Socket(address, PORT_GET_BLOCK)) {
+                    InputStream in = s.getInputStream();
+                    OutputStream out = s.getOutputStream();
+                    reference.writeDelimitedTo(out);
+                    out.flush();
+                    return Block.parseDelimitedFrom(in);
+                } catch (IOException e) {
+                    /* Ignored */
+                    e.printStackTrace();
+                }
             }
         }
         return null;
@@ -82,7 +86,9 @@ public class TCPNetwork implements Network {
     @Override
     public void broadcast(Channel channel, Cache cache, ByteString hash, Block block) {
         for (InetAddress address : peers) {
-            cast(address, channel.getName(), cache, hash, block);
+            if (address != null) {
+                cast(address, channel.getName(), cache, hash, block);
+            }
         }
     }
 
