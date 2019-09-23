@@ -179,6 +179,7 @@ public final class BCUtils {
     }
 
     public static HttpsURLConnection postForm(URL url, byte[] data) throws IOException {
+        System.out.println("URL: " + url);
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setInstanceFollowRedirects(false);
