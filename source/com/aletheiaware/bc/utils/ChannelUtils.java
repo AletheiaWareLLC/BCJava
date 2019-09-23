@@ -177,6 +177,14 @@ public class ChannelUtils {
         }
     }
 
+    public static void loadHead(Channel channel, Cache cache) {
+        Reference reference = cache.getHead(channel.getName());
+        if (reference != null) {
+            channel.setTimestamp(reference.getTimestamp());
+            channel.setHead(reference.getBlockHash());
+        }
+    }
+
     public static void loadHead(Channel channel, Cache cache, Network network) {
         Reference reference = getHeadReference(channel.getName(), cache, network);
         if (reference != null) {
