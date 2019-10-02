@@ -87,12 +87,12 @@ public class TCPNetwork implements Network {
     public void broadcast(Channel channel, Cache cache, ByteString hash, Block block) {
         for (InetAddress address : peers) {
             if (address != null) {
-                cast(address, channel.getName(), cache, hash, block);
+                cast(address, channel.getName(), cache, this, hash, block);
             }
         }
     }
 
-    public void cast(InetAddress address, String channel, Cache cache, ByteString hash, Block block) {
+    public static void cast(InetAddress address, String channel, Cache cache, Network network, ByteString hash, Block block) {
         try (Socket s = new Socket(address, PORT_BROADCAST)) {
             InputStream in = s.getInputStream();
             OutputStream out = s.getOutputStream();
@@ -107,7 +107,7 @@ public class TCPNetwork implements Network {
                     break;
                 } else {
                     // Broadcast rejected
-                    Block referencedBlock = ChannelUtils.getBlock(channel, cache, this, remote);
+                    Block referencedBlock = ChannelUtils.getBlock(channel, cache, network, remote);
 
                     if (referencedBlock.getLength() == block.getLength()) {
                         // Option A: remote points to a different chain of the same length, next chain to get a block mined on top wins
