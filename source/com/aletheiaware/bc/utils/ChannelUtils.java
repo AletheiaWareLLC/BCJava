@@ -220,7 +220,7 @@ public class ChannelUtils {
         if (block == null && network != null) {
             block = network.getBlock(Reference.newBuilder()
                     .setChannelName(channel)
-                    .setBlockHash(hash)
+                    .setRecordHash(hash)
                     .build());
             if (block != null) {
                 cache.putBlock(ByteString.copyFrom(Crypto.getProtobufHash(block)), block);
