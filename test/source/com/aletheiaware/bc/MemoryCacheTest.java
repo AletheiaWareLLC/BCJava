@@ -20,6 +20,7 @@ import com.aletheiaware.bc.BCProto.Block;
 import com.aletheiaware.bc.BCProto.BlockEntry;
 import com.aletheiaware.bc.BCProto.Record;
 import com.aletheiaware.bc.BCProto.Reference;
+import com.aletheiaware.crypto.Crypto;
 
 import com.google.protobuf.ByteString;
 

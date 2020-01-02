@@ -18,11 +18,11 @@ package com.aletheiaware.bc;
 
 import com.aletheiaware.bc.BCProto.Block;
 import com.aletheiaware.bc.BCProto.BlockEntry;
-import com.aletheiaware.bc.BCProto.KeyShare;
 import com.aletheiaware.bc.BCProto.Record;
 import com.aletheiaware.bc.BCProto.Reference;
-import com.aletheiaware.bc.BCProto.SignatureAlgorithm;
 import com.aletheiaware.bc.utils.BCUtils;
+import com.aletheiaware.crypto.CryptoProto.KeyShare;
+import com.aletheiaware.crypto.CryptoProto.SignatureAlgorithm;
 
 import com.google.protobuf.ByteString;
 

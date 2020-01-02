@@ -27,7 +27,6 @@ SOURCES=(
     source/com/aletheiaware/bc/BC.java
     source/com/aletheiaware/bc/Cache.java
     source/com/aletheiaware/bc/Channel.java
-    source/com/aletheiaware/bc/Crypto.java
     source/com/aletheiaware/bc/FileCache.java
     source/com/aletheiaware/bc/MemoryCache.java
     source/com/aletheiaware/bc/Network.java
@@ -44,12 +43,11 @@ PROTO_SOURCES=(
 )
 
 # Compile code
-javac -cp ../AletheiaWareCommonJava/out/AletheiaWareCommonJava.jar:../JavaCommon/libs/protobuf-java-3.9.1.jar ${SOURCES[*]} ${PROTO_SOURCES[*]} -d out/code
+javac -cp ../AletheiaWareCommonJava/out/AletheiaWareCommonJava.jar:../CryptoJava/out/CryptoJava.jar:../JavaCommon/libs/protobuf-java-3.9.1.jar ${SOURCES[*]} ${PROTO_SOURCES[*]} -d out/code
 jar cvf out/BCJava.jar -C out/code .
 
 TEST_SOURCES=(
     test/source/com/aletheiaware/bc/AllTests.java
-    test/source/com/aletheiaware/bc/CryptoTest.java
     test/source/com/aletheiaware/bc/FileCacheTest.java
     test/source/com/aletheiaware/bc/MemoryCacheTest.java
     test/source/com/aletheiaware/bc/NodeTest.java
@@ -60,11 +58,11 @@ TEST_SOURCES=(
 )
 
 # Compile tests
-javac -cp ../AletheiaWareCommonJava/out/AletheiaWareCommonJava.jar:../JavaCommon/libs/protobuf-java-3.9.1.jar:../JavaCommon/libs/junit-4.12.jar:../JavaCommon/libs/hamcrest-core-2.1.jar:../JavaCommon/libs/mockito-all-1.10.19.jar:out/BCJava.jar ${TEST_SOURCES[*]} -d out/test
+javac -cp ../AletheiaWareCommonJava/out/AletheiaWareCommonJava.jar:../CryptoJava/out/CryptoJava.jar:../JavaCommon/libs/protobuf-java-3.9.1.jar:../JavaCommon/libs/junit-4.12.jar:../JavaCommon/libs/hamcrest-core-2.1.jar:../JavaCommon/libs/mockito-all-1.10.19.jar:out/BCJava.jar ${TEST_SOURCES[*]} -d out/test
 jar cvf out/BCJavaTest.jar -C out/test .
 
 # Run tests
-java -cp ../AletheiaWareCommonJava/out/AletheiaWareCommonJava.jar:../JavaCommon/libs/protobuf-java-3.9.1.jar:../JavaCommon/libs/junit-4.12.jar:../JavaCommon/libs/hamcrest-core-2.1.jar:../JavaCommon/libs/mockito-all-1.10.19.jar:out/BCJava.jar:out/BCJavaTest.jar org.junit.runner.JUnitCore com.aletheiaware.bc.AllTests
+java -cp ../AletheiaWareCommonJava/out/AletheiaWareCommonJava.jar:../CryptoJava/out/CryptoJava.jar:../JavaCommon/libs/protobuf-java-3.9.1.jar:../JavaCommon/libs/junit-4.12.jar:../JavaCommon/libs/hamcrest-core-2.1.jar:../JavaCommon/libs/mockito-all-1.10.19.jar:out/BCJava.jar:out/BCJavaTest.jar org.junit.runner.JUnitCore com.aletheiaware.bc.AllTests
 
 # Checkstyle
 java -jar ../JavaCommon/libs/checkstyle-8.24-all.jar -c ../checkstyle.xml ${SOURCES[*]} ${TEST_SOURCES[*]} > out/style || true

@@ -21,7 +21,6 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        com.aletheiaware.bc.CryptoTest.class,
         com.aletheiaware.bc.FileCacheTest.class,
         com.aletheiaware.bc.MemoryCacheTest.class,
         com.aletheiaware.bc.NodeTest.class,

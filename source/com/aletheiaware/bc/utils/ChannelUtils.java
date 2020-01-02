@@ -26,9 +26,9 @@ import com.aletheiaware.bc.Channel;
 import com.aletheiaware.bc.Channel.BlockCallback;
 import com.aletheiaware.bc.Channel.KeyCallback;
 import com.aletheiaware.bc.Channel.RecordCallback;
-import com.aletheiaware.bc.Crypto;
 import com.aletheiaware.bc.Network;
 import com.aletheiaware.common.utils.CommonUtils;
+import com.aletheiaware.crypto.Crypto;
 
 import com.google.protobuf.ByteString;
 

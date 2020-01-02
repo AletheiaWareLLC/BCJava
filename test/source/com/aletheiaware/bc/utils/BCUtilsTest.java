@@ -16,7 +16,7 @@
 
 package com.aletheiaware.bc.utils;
 
-import com.aletheiaware.bc.Crypto;
+import com.aletheiaware.crypto.Crypto;
 
 import java.security.KeyPair;
 

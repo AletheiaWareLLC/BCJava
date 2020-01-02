@@ -25,6 +25,7 @@ import com.aletheiaware.bc.utils.BCUtils;
 import com.aletheiaware.bc.utils.ChannelUtils;
 import com.aletheiaware.common.utils.CommonUtils;
 import com.aletheiaware.common.utils.CommonUtils.Pair;
+import com.aletheiaware.crypto.Crypto;
 
 import com.google.protobuf.ByteString;
 
